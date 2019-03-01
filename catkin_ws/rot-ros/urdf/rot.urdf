@@ -1,0 +1,272 @@
+<robot name="RoT" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- Colour definitions -->
+<material name="black">
+    <color rgba="0.0 0.0 0.0 1.0"/>
+</material>
+<material name="white">
+    <color rgba="0.8 0.8 0.8 1.0"/>
+</material>
+<material name="grey">
+    <color rgba="0.05 0.05 0.05 1.0"/>
+</material>
+<material name="blue">
+    <color rgba="0.0 0.0 1.0 1.0"/>
+</material>
+
+<!-- * * * Link Definitions * * * -->
+<link name="base_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 0" />
+        <geometry>
+            <box size="0.24 0.08 0.07"/>
+        </geometry>
+        <material name="grey"/>
+    </visual>
+</link>
+<link name="battery">
+    <visual>
+        <geometry>
+            <box size="0.16 0.11 0.04"/>
+        </geometry>
+        <material name="blue"/>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0.04" rpy="0 0 0"/>
+        <geometry>
+            <box size="0.38 0.24 0.28"/>
+        </geometry>
+    </collision>
+</link>
+<link name="compute">
+    <visual>
+        <geometry>
+            <box size="0.23 0.11 0.06"/>
+        </geometry>
+        <material name="white"/>
+    </visual>	
+</link>
+<link name="servoPan">
+    <visual>
+        <geometry>
+            <box size="0.055 0.03 0.05"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="servoTilt">
+    <visual>
+        <axis xyz="0 0 0" />
+        <geometry>
+        <box size="0.055 0.05 0.03"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="headBracket1">
+    <visual>
+        <origin xyz="0.025 0.025 0.0" />
+        <geometry>
+            <box size="0.045 0.002 0.030"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="headBracket2">
+    <visual>
+      <origin xyz="0.025 -0.025 0.0" />
+        <geometry>
+            <box size="0.045 0.002 0.030"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="headBracket3">
+    <visual>
+        <origin xyz="0.0475 0.0 0.0" rpy="0 0 0"/>
+        <axis xyz="0 0 0.0" />
+        <geometry>
+            <box size="0.002 0.05 0.030"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="lidarUnit">
+    <visual>
+        <axis xyz="0.0 0.0 0.0" />
+        <geometry>
+            <box size="0.01 0.035 0.015"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="cameraUnit">
+    <visual>
+        <geometry>
+            <box size="0.008 0.105 0.03"/>
+        </geometry>
+        <material name="white" />
+    </visual>	
+</link>
+<link name="cameraLeft">
+    <visual>
+        <geometry>
+            <cylinder radius="0.0025" length="0.002"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="cameraRight">
+    <visual>
+        <geometry>
+            <cylinder radius="0.0025" length="0.002"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="wheelFrontLeft">
+    <visual>
+        <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+        <axis xyz="0 0 0.0" />
+        <geometry>
+            <cylinder radius="0.035" length="0.04"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="wheelFrontRight">
+    <visual>
+        <origin rpy="1.5708 0 0"/>
+        <geometry>
+            <cylinder radius="0.035" length="0.04"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="wheelRearLeft">
+    <visual>
+        <origin rpy="1.5708 0 0"/>
+        <axis xyz="0 0 0.0" />
+        <geometry>
+            <cylinder radius="0.035" length="0.04"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+<link name="wheelRearRight">
+    <visual>
+        <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+        <axis xyz="0 0 0.0" />
+        <geometry>
+            <cylinder radius="0.035" length="0.04"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
+
+<!-- Body -->
+
+<joint name="battary_joint" type="fixed">
+    <origin xyz="-0.035 0 0.055" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="battery"/>
+</joint>
+<joint name="compute_joint" type="fixed">
+    <origin xyz="-0.07 0 0.105" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="compute"/>
+</joint>
+
+<joint name="servoPan_joint" type="fixed">
+    <origin xyz="0.075 0 0.055" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="servoPan"/>
+</joint>
+
+<!-- Head Tilt/Pan -->
+
+<joint name="head_pan_link" type="revolute">
+    <origin xyz="0.01 -0.01 0.04" rpy="0 0 0"/>
+    <axis xyz="0 0 1" />
+    <parent link="servoPan"/>
+    <child link="servoTilt"/>
+    <limit effort="100" velocity="1.0" lower="-0.698" upper="0.698" />
+</joint>
+
+<joint name="head_tilt_link" type="revolute">
+    <axis xyz="0 1 0" />
+    <parent link="servoTilt"/>
+    <child link="headBracket1"/> 
+    <limit effort="100" velocity="1.0" lower="-0.698" upper="0.698" />
+</joint>
+
+<joint name="head_tilt2_link" type="fixed">
+    <axis xyz="0 1 0" />
+    <parent link="headBracket1"/>
+    <child link="headBracket2"/> 
+</joint>
+<!-- Head -->
+<joint name="headBracket3_link" type="fixed">
+    <parent link="headBracket1"/>
+    <child link="headBracket3"/>
+</joint>
+<joint name="lidarUnit_link" type="fixed">
+    <origin xyz="0.052 0.0 0.0" rpy="0 0 0"/>
+    <parent link="headBracket3"/>
+    <child link="lidarUnit"/>
+</joint>
+<joint name="cameraUnit_link" type="fixed">
+    <origin xyz="0.045 0.0 0.03" rpy="0 0 0"/>
+    <parent link="headBracket3"/>
+    <child link="cameraUnit"/>
+</joint>
+<joint name="cameraLeft_link" type="fixed">
+    <origin xyz="0.004 -0.035 0.0" rpy="0 1.5708 0"/>
+    <parent link="cameraUnit"/>
+    <child link="cameraLeft"/>
+</joint>
+<joint name="cameraRight_link" type="fixed">
+    <origin xyz="0.004 0.035 0.0" rpy="0 1.5708 0"/>
+    <parent link="cameraUnit"/>
+    <child link="cameraRight"/>
+</joint>
+
+<!-- Front Right Wheel Joints -->
+
+<joint name="stearingLeft" type="revolute">
+    <origin xyz="0.08 0.08 -0.025" rpy="0 0 0"/>
+    <axis xyz="0 0 1" />
+    <parent link="base_link"/>
+    <child link="wheelFrontLeft"/>
+    <limit effort="100" velocity="1.0" lower="-0.349" upper="0.349" />
+</joint>
+
+<!-- Front Right Wheel Joints -->
+<joint name="stearingRight" type="revolute">
+    <origin xyz="0.08 -0.08 -0.025" rpy="0 0 0"/>
+    <axis xyz="0 0 1" />
+    <parent link="base_link"/>
+    <child link="wheelFrontRight"/> 
+    <limit effort="100" velocity="1.0" lower="-0.349" upper="0.349" />
+</joint>
+
+<!-- Rear Left Wheel Joint -->
+
+<joint name="jointWheelRearLeft" type="fixed">
+    <origin xyz="-0.09 0.08 -0.025" rpy="0 0 0"/>
+    <axis xyz="0 1 0" />
+    <parent link="base_link"/>
+    <child link="wheelRearLeft"/> 
+</joint>
+
+<!-- Rear Right Wheel Joint -->
+
+<joint name="jointWheelRearRight" type="fixed">
+    <origin xyz="-0.09 -0.08 -0.025" rpy="0 0 0"/>
+    <axis xyz="0 1 0" />
+    <parent link="base_link"/>
+    <child link="wheelRearRight"/> 
+</joint>
+
+</robot>
