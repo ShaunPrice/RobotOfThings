@@ -1,5 +1,5 @@
-#Robot of Things (RoT)#
-##Description
+# Robot of Things (RoT)
+## Description
 Code and documentation for my personal experimental robot.
 
 The robot is based on a remote control car base and mostely uses parts I already had (things).
@@ -12,7 +12,7 @@ Package Name | Github source | Reference
 AWS RoboMaker TTS | https://github.com/aws-robotics/tts-ros1 | AWS RoboMaker (https://aws.amazon.com/robomaker/)
 Ackermann message | https://github.com/ros-drivers/ackermann_msgs | ROS Ackermann Group (http://wiki.ros.org/Ackermann%20Group)
 
-##Overview
+## Overview
 This robot is a personal projct to test robotics, deap learning and vision processing systems. I've shared the code here to help others in their learning of robotics and so others can give me feedback.
 
 The robot is based on ROS (http://ros.org) the Robot Operating System. It uses many other people code either as packages or as modified source. I strive to credit the original authors where possible but sometimes miss one. If you notice any code not attributed to it's authore please let me know.
@@ -29,24 +29,24 @@ While making this robot I have used many online sites fo information. In no part
 **Adafruit** - https://www.adafruit.com/
 **Sparkfun Electronics** - https://www.sparkfun.com/
 
-##Controller and Sensors Overview
+## Controller and Sensors Overview
 A short cli of RoT running:
 https://youtu.be/b_HMtGfrs7E
 ![Controller Overview](/documentation/RoT-overview.png)
 
-###Messages and Transforms
-####Frames
+### Messages and Transforms
+#### Frames
 ![Transform Tree](/documentation/RoT-frames.png)
 
-####Messages
+#### Messages
 ![Message Tree](/documentation/RoT-messages.png)
 
-###Rviz
+### Rviz
 ![Rviz with the Teleop terminal](/documentation/RoT-messages.png)
 A short clip of RoT running in the Rviz application on Youtube.
 https://youtu.be/lAinIkkNIuQ
 
-##TODO
+## TODO
 - [ ] Complete the readme (this document)
 - [ ] Check the controller transformations
 - [ ] Fix the URDF mapping to RoT messages
