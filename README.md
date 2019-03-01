@@ -42,7 +42,7 @@ https://youtu.be/b_HMtGfrs7E
 ![Message Tree](/documentation/RoT-messages.png)
 
 ### Rviz
-![Rviz with the Teleop terminal](/documentation/RoT-rvis.png)
+![Rviz with the Teleop terminal](/documentation/RoT-rviz.png)
 A short clip of RoT running in the Rviz application on Youtube.
 https://youtu.be/lAinIkkNIuQ
 
