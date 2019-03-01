@@ -4,6 +4,8 @@ Code and documentation for my personal experimental robot.
 
 The robot is based on a remote control car base and mostely uses parts I already had (things).
 
+![Robot of Things (RoT)](\documentation\rot.png)
+
 **Note:**
 This is not a complete solution. You will also need at least the following packages and many features either won't work or have issues:
 
