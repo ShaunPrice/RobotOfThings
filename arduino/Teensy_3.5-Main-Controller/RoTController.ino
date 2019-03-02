@@ -49,6 +49,8 @@ also, in ros.h changed the following to increase the buffer from 512 to 1024:
 #include <sensor_msgs/Range.h>
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
+#include <sensor_msgs\JointState.h>
+
 ////////////////////////////////////////////////////////////////
 // rosserial_arduino generated headers
 // Use to generate and add to rosserial_arduino headers
@@ -203,11 +205,13 @@ volatile float32_t rearUltrasonicRange = 0;
 
 uint32_t odom_current_millis, odom_last_millis;
 
+char* jointStateNames[] = { "head_pan_link", "head_tilt_link", "steeringLeft", "steeringRight" };
 const char* odometry_id = "odom";
 const char* base_link_id = "base_link";
 const char* imu_body_link_id = "imu_body_link";
 const char* head_pan_link_id = "head_pan_link";
 const char* head_tilt_link_id = "head_tilt_link";
+const char* joint_states_id = "joint_states";
 
 const char* imu_body_id = "imu_body";
 const char* lidar_id = "lidar";
@@ -235,9 +239,6 @@ tf::TransformBroadcaster transformBroadcaster;
 
 geometry_msgs::TransformStamped transformOdometry;
 geometry_msgs::TransformStamped transformBase;
-geometry_msgs::TransformStamped transformHeadPan;
-geometry_msgs::TransformStamped transformHeadTilt;
-geometry_msgs::TransformStamped transformLidar;
 geometry_msgs::TransformStamped transformUltrasonicFront;
 geometry_msgs::TransformStamped transformUltrasonicRear;
 
@@ -414,6 +415,7 @@ std_msgs::Float32 motorCurrentPosition_msg;
 std_msgs::String motorEmergencyStop_msg;
 std_msgs::String motorCurrentOperationState_msg;
 sensor_msgs::Imu bodyImu_msg;
+sensor_msgs::JointState joint_state_msg;
 
 // RoS Publishers
 ros::Publisher pubOdometry(odometry_id, &odometry_msg);
@@ -425,45 +427,12 @@ ros::Publisher pubMotorCurrentPosition(motorCurrentPosition_id, &motorCurrentPos
 ros::Publisher pubMotorEmergencyStop(motorEmergencyStop_id, &motorEmergencyStop_msg);
 ros::Publisher pubMotorCurrentOperationState(motorCurrentOperationState_id, &motorCurrentOperationState_msg);
 ros::Publisher pubBodyImu(imu_body_id, &bodyImu_msg);
+ros::Publisher pubJointState(joint_states_id, &joint_state_msg);
 
 void publishLidar()
 {
-	transformLidar.header.frame_id = base_link_id;
-	transformLidar.header.stamp = rosNodeHandler.now();
-	transformLidar.child_frame_id = head_pan_link_id;
-	transformLidar.transform.translation.x = 0.075;
-	transformLidar.transform.translation.y = 0.0;
-	transformLidar.transform.translation.z = 0.09;
-	transformLidar.transform.rotation.w = 1;
-	transformLidar.transform.rotation.x = 0;
-	transformLidar.transform.rotation.y = 0;
-	transformLidar.transform.rotation.z = 0;
-
-	transformHeadPan.header.frame_id = head_pan_link_id;
-	transformHeadPan.header.stamp = rosNodeHandler.now();
-	transformHeadPan.child_frame_id = head_tilt_link_id;
-	transformHeadPan.transform.translation.x = 0.015;
-	transformHeadPan.transform.translation.y = -0.01;
-	transformHeadPan.transform.translation.z = 0.01;
-	transformHeadPan.transform.rotation.w = 0;
-	transformHeadPan.transform.rotation.x = 0;
-	transformHeadPan.transform.rotation.y = 0;
-	transformHeadPan.transform.rotation.z = 0;
-
-	transformHeadTilt.header.frame_id = head_tilt_link_id;
-	transformHeadTilt.header.stamp = rosNodeHandler.now();
-	transformHeadTilt.child_frame_id = lidar_id;
-	transformHeadTilt.transform.translation.x = 0.055;
-	transformHeadTilt.transform.translation.y = 0.0;
-	transformHeadTilt.transform.translation.z = 0.01;
-	transformHeadTilt.transform.rotation.w = 0;
-	transformHeadTilt.transform.rotation.x = 0;
-	transformHeadTilt.transform.rotation.y = 0;
-	transformHeadTilt.transform.rotation.z = 0;
-
 	if (micros() - lidarUpdateTime <= 100000)
 	{
-		// Only send data if it's within the specified min and max range
 		lidar_msg.header.stamp = rosNodeHandler.now();
 		lidar_msg.header.frame_id = lidar_id;
 
@@ -475,23 +444,29 @@ void publishLidar()
 		lidar_msg.max_range = 12.0;
 		lidar_msg.min_range = 0.3;
 		lidar_msg.radiation_type = lidar_msg.INFRARED;
-				
-		transformHeadPan.transform.rotation.w = cosf(headPanRadians / 2);
-		transformHeadPan.transform.rotation.x = 0;
-		transformHeadPan.transform.rotation.y = 0;
-		transformHeadPan.transform.rotation.z = sinf(headPanRadians / 2);
-
-		transformHeadTilt.transform.rotation.w = cosf(headTiltRadians / 2);
-		transformHeadTilt.transform.rotation.x = 0;
-		transformHeadTilt.transform.rotation.y = sin(headTiltRadians / 2);
-		transformHeadTilt.transform.rotation.z = 0;
 
 		pubLidar.publish(&lidar_msg);
 	}
+}
 
-	transformBroadcaster.sendTransform(transformLidar);
-	transformBroadcaster.sendTransform(transformHeadPan);
-	transformBroadcaster.sendTransform(transformHeadTilt);
+void publishJointState()
+{
+	float headPosition[2];
+
+	joint_state_msg.header.frame_id = joint_states_id;
+	joint_state_msg.header.stamp = rosNodeHandler.now();
+
+	joint_state_msg.name_length = 4;
+	joint_state_msg.position_length = 4;
+	float32_t positions[4];
+	positions[0] = headPanRadians;
+	positions[1] = headTiltRadians;
+	positions[2] = steering_angle;
+	positions[3] = steering_angle;
+	joint_state_msg.name = jointStateNames;
+	joint_state_msg.position = positions;
+
+	pubJointState.publish(&joint_state_msg);
 }
 
 void publishFrontUltrasonicRange()
@@ -510,19 +485,7 @@ void publishFrontUltrasonicRange()
 	ultrasonic_front_msg.min_range = 0.02;
 	ultrasonic_front_msg.radiation_type =  ultrasonic_front_msg.ULTRASOUND;
 
-	transformUltrasonicFront.header.frame_id = base_link_id;
-	transformUltrasonicFront.header.stamp = rosNodeHandler.now();
-	transformUltrasonicFront.child_frame_id = ultrasonic_front_id;
-	transformUltrasonicFront.transform.translation.x = 0.135;
-	transformUltrasonicFront.transform.translation.y = 0.0;
-	transformUltrasonicFront.transform.translation.z = 0.0;
-	transformUltrasonicFront.transform.rotation.w = 1;
-	transformUltrasonicFront.transform.rotation.x = 0;
-	transformUltrasonicFront.transform.rotation.y = 0;
-	transformUltrasonicFront.transform.rotation.z = 0;
-
 	pubUltrasonicFront.publish(&ultrasonic_front_msg);
-	transformBroadcaster.sendTransform(transformUltrasonicFront);
 }
 
 void publishRearUltrasonicRange()
@@ -540,20 +503,8 @@ void publishRearUltrasonicRange()
 	ultrasonic_rear_msg.max_range = 4.5;
 	ultrasonic_rear_msg.min_range = 0.02;
 	ultrasonic_rear_msg.radiation_type = ultrasonic_rear_msg.ULTRASOUND; 
-	
-	transformUltrasonicRear.header.frame_id = base_link_id;
-	transformUltrasonicRear.header.stamp = rosNodeHandler.now();
-	transformUltrasonicRear.child_frame_id = ultrasonic_rear_id;
-	transformUltrasonicRear.transform.translation.x = -0.2;
-	transformUltrasonicRear.transform.translation.y = 0.0;
-	transformUltrasonicRear.transform.translation.z = 0.04;
-	transformUltrasonicRear.transform.rotation.w = 0;
-	transformUltrasonicRear.transform.rotation.x = 0;
-	transformUltrasonicRear.transform.rotation.y = 0;
-	transformUltrasonicRear.transform.rotation.z = 1;
 
 	pubUltrasonicRear.publish(&ultrasonic_rear_msg);
-	transformBroadcaster.sendTransform(transformUltrasonicRear);
 }
 
 // Motor odometry publisher (meters)
@@ -1084,6 +1035,9 @@ void publishRosDataLoop()
 		// Get the lidar data.
 		publishLidar();
 
+		// Publish the head joint position
+		publishJointState();
+
 		// Publish the Head IMU
 		publishBodyImu();
 
@@ -1371,6 +1325,7 @@ void setup()
 	rosNodeHandler.advertise(pubMotorCurrentOperationState);
 	rosNodeHandler.advertise(pubBodyImu);
 	rosNodeHandler.advertise(pubOdometry);
+	rosNodeHandler.advertise(pubJointState);
 
 	piLeds[5] = CRGB::Green;
 	FastLED.show();

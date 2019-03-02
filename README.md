@@ -38,10 +38,10 @@ https://youtu.be/b_HMtGfrs7E
 
 ### Messages and Transforms
 #### Frames
-![Transform Tree](/documentation/RoT-frames.png)
+![Transform Tree](/documentation/frames.png)
 
-#### Messages
-![Message Tree](/documentation/RoT-messages.png)
+#### Robot Model (URDF)
+![URDF Tree](/documentation/urdf.png)
 
 ### Rviz
 ![Rviz with the Teleop terminal](/documentation/RoT-rviz.png)
@@ -50,8 +50,8 @@ https://youtu.be/lAinIkkNIuQ
 
 ## TODO
 - [ ] Complete the readme (this document)
-- [ ] Check the controller transformations
-- [ ] Fix the URDF mapping to RoT messages
+- [x] Check the controller transformations
+- [x] Fix the URDF mapping to RoT messages
 - [ ] Implement LIDAR Scanning on the Teensy controller
 - [ ] Implement the depth and stereo image messages fro the Raspberry Pi stereo comeras
 - [ ] Implement the ackermann steering planner (teb_local_planner)

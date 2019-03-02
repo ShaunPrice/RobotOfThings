@@ -3,15 +3,18 @@
 -->
 
 <launch>
+    <arg name="model" default="$(find rot)/urdf/rot.urdf"/>
+    <arg name="config_file" default="$(find tts)/config/sample_configuration.yaml" />
     <node pkg="rosserial_python" type="serial_node.py" name="teensy_node">
         <param name="port" value="/dev/ttyACM0"/>
         <param name="baud" value="10000000"/>
     </node>
-    <arg name="config_file" default="$(find tts)/config/sample_configuration.yaml" />
-
     <include file="$(find tts)/launch/tts_polly.launch" >
         <!-- The configuration can either be passed in using the "config_file" parameter or
                 by using a rosparam tag to load the config into the parameter server -->
         <arg name="config_file" value="$(arg config_file)"/>
     </include>
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
 </launch>

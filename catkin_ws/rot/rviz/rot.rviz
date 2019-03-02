@@ -76,45 +76,19 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        base_link:
-          Value: true
-        head_pan_link:
-          Value: true
-        head_tilt_link:
-          Value: true
-        imu_body:
-          Value: true
-        lidar:
-          Value: true
-        odom:
-          Value: true
-        ultrasonic_front:
-          Value: true
-        ultrasonic_rear:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        odom:
-          base_link:
-            imu_body:
-              head_pan_link:
-                head_tilt_link:
-                  lidar:
-                    {}
-              ultrasonic_front:
-                {}
-              ultrasonic_rear:
-                {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Alpha: 0.5
       Buffer Length: 1
       Class: rviz/Range
@@ -162,6 +136,112 @@ Visualization Manager:
       Topic: /lidar
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Class: rviz/RobotModel
+      Collision Enabled: false
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        battery:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        cameraLeft:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        cameraRight:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        cameraUnit:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        compute:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        headBracket1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        headBracket2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        headBracket3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lidar:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        servoPan:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        servoTilt:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ultrasonic_front:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ultrasonic_rear:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheelFrontLeft:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheelFrontRight:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheelRearLeft:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheelRearRight:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Name: RobotModel
+      Robot Description: robot_description
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -187,7 +267,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 10
+      Distance: 0.7986347675323486
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
