@@ -99,6 +99,15 @@
         <material name="black" />
     </visual>	
 </link>
+<!-- Joined to lidar to make laser scans -->
+<link name="laser_scan">
+    <visual>
+        <geometry>
+            <box size="0.01 0.035 0.015"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
 <link name="cameraUnit">
     <visual>
         <geometry>
@@ -225,6 +234,11 @@
     <origin xyz="0.052 0.0 0.0" rpy="0 0 0"/>
     <parent link="headBracket3"/>
     <child link="lidar"/>
+</joint>
+<joint name="laser_scan_link" type="fixed">
+    <origin xyz="0.13 0.0 0.13" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="laser_scan"/>
 </joint>
 <joint name="cameraUnit_link" type="fixed">
     <origin xyz="0.045 0.0 0.03" rpy="0 0 0"/>

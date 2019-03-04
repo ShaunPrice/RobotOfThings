@@ -52,7 +52,7 @@ https://youtu.be/lAinIkkNIuQ
 - [ ] Complete the readme (this document)
 - [x] Check the controller transformations
 - [x] Fix the URDF mapping to RoT messages
-- [ ] Implement LIDAR Scanning on the Teensy controller
+- [x] Implement LIDAR Scanning on the Teensy controller
 - [ ] Implement the depth and stereo image messages fro the Raspberry Pi stereo comeras
 - [ ] Implement the ackermann steering planner (teb_local_planner)
 - [ ] Integrate with AWS RoboMaker

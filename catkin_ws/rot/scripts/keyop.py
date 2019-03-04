@@ -10,7 +10,7 @@ RoT_keyop.py:
 __author__ = 'Shaun Price'
 __copyright__   = "Copyright 2019, Shaun Price"
 __license__ = "GPLv3"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __maintainer__ = "Shaun Price"
 __email__ = "shaun@priceconsulting.biz"
 
@@ -38,6 +38,7 @@ control_keys = {
     'head_up'    : '\x77', # w
     'head_down'  : '\x7a', # z
     'music'   : '\x6d', # m
+    'lidar'   : '\x6c', # l
     'reset'   : '\x72', # r
     'action1' : '\x31', # 1
     'action2' : '\x32', # 2
@@ -74,6 +75,7 @@ class RoTKeyop:
         cmd_run_topic = 'ackermann_cmd'
         cmd_head_tilt_topic = 'headTilt'
         cmd_head_pan_topic = 'headPan'
+        cmd_lidar_topic = 'lidarScan'
         cmd_music_topic = 'musicLights'
 
         self.process = None
@@ -95,12 +97,14 @@ class RoTKeyop:
         self.steering_angle = 0
         self.head_tilt = 0
         self.head_pan = 0
+        self.lidarScan = False # False = Off, True = On
         self.musicLights = False # False = Off, True = On
         self.reset = False
         self.action = 0 # integer from 1-9 of what to say. Get's reset to 0 when completed
         self.motors_pub = rospy.Publisher(cmd_run_topic, AckermannDriveStamped, queue_size=1)
         self.head_tilt_pub = rospy.Publisher(cmd_head_tilt_topic, Int16, queue_size=1)
         self.head_pan_pub = rospy.Publisher(cmd_head_pan_topic, Int16, queue_size=1)
+        self.lidar_pub = rospy.Publisher(cmd_lidar_topic, Bool, queue_size=1)
         self.music_pub = rospy.Publisher(cmd_music_topic, Bool, queue_size=1)
         rospy.Timer(rospy.Duration(1.0/5.0), self.pub_messages_callback, oneshot=False)
         rospy.Timer(rospy.Duration(1.0/5.0), self.pub_actions_callback, oneshot=False)
@@ -124,6 +128,11 @@ class RoTKeyop:
             head_pan_cmd_msg = Int16()
             head_pan_cmd_msg.data = self.head_pan
             self.head_pan_pub.publish(head_pan_cmd_msg)
+
+            # LIDAR scan mode
+            lidar_cmd_msg = Bool()
+            lidar_cmd_msg.data = self.lidarScan
+            self.lidar_pub.publish(lidar_cmd_msg)
 
             # Music and lights
             music_cmd_msg = Bool()
@@ -176,6 +185,7 @@ class RoTKeyop:
         rospy.loginfo('\x1b[1M\rUse arrows to change speed and steering angle')
         rospy.loginfo('\x1b[1M\rUse "a" and "s" for head pan')
         rospy.loginfo('\x1b[1M\rUse "w" and "z" for head tilt')
+        rospy.loginfo('\x1b[1M\rUse "l" to turn on/off LIDAR scanning mode')
         rospy.loginfo('\x1b[1M\rUse "m" to turn on/off music and lights mode')
         rospy.loginfo('\x1b[1M\rUse "1" for RoT introduction')
         rospy.loginfo('\x1b[1M\rUse "2" for hello! my name is RoT')
@@ -189,6 +199,13 @@ class RoTKeyop:
                       '\033[34;1mSpeed: \033[32;1m%0.2f m/s, '
                       '\033[34;1mSteer Angle: \033[32;1m%0.2f rad\033[0m',
                       self.speed, self.steering_angle)
+        rospy.loginfo('\x1b[1M\r*********************************************')
+        rospy.loginfo('\x1b[1M\r'
+                      '\033[34;1mMusic Mode: \033[32;1m%s, '
+                      '\033[34;1mLIDAR Scan: \033[32;1m%s\033[0m',
+                      self.musicLights, self.lidarScan)
+        rospy.loginfo('\x1b[1M\r*********************************************')
+        rospy.loginfo('\x1b[1M\r')
 
     def get_key(self):
         tty.setraw(sys.stdin.fileno())
@@ -218,14 +235,19 @@ class RoTKeyop:
                     self.head_tilt = clip(self.head_tilt, self.head_tilt_range[0], self.head_tilt_range[1])
                     self.head_pan = clip(self.head_pan, self.head_pan_range[0], self.head_pan_range[1])
                 self.print_state()
+            elif key == control_keys['lidar']:
+                self.lidarScan = not self.lidarScan
+                self.print_state()
             elif key == control_keys['music']:
                 self.musicLights = not self.musicLights
+                self.print_state()
             elif key == control_keys['reset']:
                     self.reset = True
                     self.speed = 0
                     self.steering_angle = 0
                     self.head_tilt = 0
                     self.head_pan = 0
+                    self.lidarScan = False
                     self.musicLights = False
                     self.print_state()
             elif key == control_keys['action1']:
@@ -253,7 +275,7 @@ class RoTKeyop:
         self.finalize()
 
     def finalize(self):
-        rospy.loginfo('Halting motors, aligning wheels and head, turning off music mode and exiting...')
+        rospy.loginfo('Halting motors, aligning wheels and head, turning off music mode, turning off lidar scan mode and exiting...')
         self.settings = termios.tcgetattr(sys.stdin)
         ackermann_cmd_msg = AckermannDriveStamped()
         ackermann_cmd_msg.drive.speed = 0
@@ -267,6 +289,10 @@ class RoTKeyop:
         head_pan_cmd_msg = Int16()
         head_pan_cmd_msg.data = 0
         self.head_pan_pub.publish(head_pan_cmd_msg)
+
+        lidar_cmd_msg = Bool()
+        lidar_cmd_msg.data = False
+        self.lidar_pub.publish(lidar_cmd_msg)
 
         music_cmd_msg = Bool()
         music_cmd_msg.data = False

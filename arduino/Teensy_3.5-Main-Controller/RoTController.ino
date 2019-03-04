@@ -50,6 +50,7 @@ also, in ros.h changed the following to increase the buffer from 512 to 1024:
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs\JointState.h>
+#include <sensor_msgs\LaserScan.h>
 
 ////////////////////////////////////////////////////////////////
 // rosserial_arduino generated headers
@@ -68,32 +69,35 @@ also, in ros.h changed the following to increase the buffer from 512 to 1024:
 #include <ArduinoJson.h>
 #include "imumaths/imumaths.h"
 
+#define MAIN_LOOP_HZ 20
+#define IMU_LOOP_HZ  100 // Frequency the IMU Loop is read
+
 #define SERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
 #define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
 
-#define servoCount  3
-#define steering	0
-#define headPan		1
-#define headTilt	2
+#define SERVO_COUNT 3
+#define STEERING	0
+#define HEAD_PAN	1
+#define HEAD_TILT	2
 
-#define MotorReverse -100000000 // Motor is in steps per 10,000 seconds
-#define MotorStop 0
-#define MotorForward +100000000 // Motor is in steps per 10,000 seconds
+#define MOTOR_REVERSE -100000000 // Motor is in steps per 10,000 seconds
+#define MOTOR_STOP 0
+#define MOTOR_FORWARD +100000000 // Motor is in steps per 10,000 seconds
 
-#define SteeringRange	20
-#define SteerRight		100
-#define SteerForward	80
-#define SteerLeft		60
+#define STEERING_RANGE	 20
+#define STEERING_RIGHT	100
+#define STEERING_FORWARD 80
+#define STEERING_LEFT	 60
 
-#define HeadPanRange	40
-#define HeadPanRight	110
-#define HeadPanForward	70
-#define HeadPanLeft		30
+#define HEAD_PAN_RANGE	 40
+#define HEAD_PAN_RIGHT	110
+#define HEAD_PAN_FORWARD 70
+#define HEAD_PAN_LEFT	 30
 
-#define HeadTiltRange	40
-#define HeadTiltUp		125
-#define HeadTiltLevel	85
-#define HeadTiltDown	45
+#define HEAD_TILT_RANGE  40
+#define HEAD_TILT_UP	125
+#define HEAD_TILT_LEVEL  85
+#define HEAD_TILT_DOWN	 45
 
 #define SERIAL1_RX_PIN 0
 #define SERIAL1_TX_PIN 1
@@ -125,16 +129,20 @@ also, in ros.h changed the following to increase the buffer from 512 to 1024:
 #define MOUTH_NUM_LEDS 3
 #define MOUTH_LED_DATA_PIN 6
 
-#define lidarScanLeft2Right true
-#define lidarScanRight2Left false
+#define LIDAR_HEAD_PAN_STEPS 20 // Steps per scan
+#define LIDAR_HEAD_PAN_STEP 200 / LIDAR_HEAD_PAN_STEPS // 200 (-100% to 100%) divided by the # steps
+#define LIDAR_MIN_RANGE 0.3
+#define LIDAR_MAX_RANGE 12.0
+#define LIDAR_FIELD_OF_VIEW 0.04
+#define LIDAR_MIN_INTENSITY 20
 
 // AudioMemory in Teensy Audio ligrary has issues.
 // Define the memory bock manually
-#define memoryBlockSize 12
-static DMAMEM audio_block_t audioMemoryBlock[memoryBlockSize];
+#define MEMORY_BLOCK_SIZE 12
+static DMAMEM audio_block_t audioMemoryBlock[MEMORY_BLOCK_SIZE];
 
 // GUItool: begin automatically generated code
-AudioInputUSB           usb1;           //xy=131,330
+AudioInputUSB           usb1;           //xy=131,330wwaal
 AudioAnalyzePeak        peak1;          //xy=471,368
 AudioAnalyzeFFT256		fft1;
 AudioMixer4				mixer1;
@@ -146,7 +154,17 @@ AudioConnection         patchCord4(mixer1, 0, peak1, 0);
 AudioConnection         patchCord5(mixer1, 0, fft1, 0);
 // GUItool: end automatically generated code
 
-bool musicLights = false;
+bool musicLightsMode = false;
+
+volatile bool lidarScanMode = false;
+enum LidarScanState {Start = 0, Initialising = 1, BeginScanning, Scanning, EndScanning};
+volatile int lidarScanState = LidarScanState::Start;
+volatile uint32_t lidarInitialiseWait = 0;
+volatile uint16_t lidar_counter = 0;
+volatile int16_t scan_angle = 0;
+sensor_msgs::LaserScan lidar_scan_msg;
+sensor_msgs::LaserScan temp_lidar_scan_msg;
+volatile bool sendLidarMsg = false;
 
 CRGB piLeds[PI_NUM_LEDS];
 CRGB odroidLeds[ODROID_NUM_LEDS];
@@ -156,6 +174,7 @@ uint8_t gHue = 0; // rotating "base color"
 IntervalTimer imuTimer;
 IntervalTimer ledUpdateTimer;
 IntervalTimer rangeTimer;
+IntervalTimer lidarTimer;
 
 MPU9250 bodyImu(MPU9250_ADDRESS_AD0, Wire2);
 
@@ -173,9 +192,12 @@ bool lidarActive = false;
 
 bool ledState = false; // Indicator to let us know the updates are running
 
-ServoLimits rotServoLimits[servoCount] = { { SteerLeft, SteerForward , SteerRight }, { HeadPanRight, HeadPanForward, HeadPanLeft }, { HeadTiltDown, HeadTiltLevel, HeadTiltUp } };
+ServoLimits rotServoLimits[SERVO_COUNT] = { { STEERING_LEFT, STEERING_FORWARD , STEERING_RIGHT },
+											{ HEAD_PAN_RIGHT, HEAD_PAN_FORWARD, HEAD_PAN_LEFT }, 
+											{ HEAD_TILT_DOWN, HEAD_TILT_LEVEL, HEAD_TILT_UP } };
 
 volatile float32_t lidarRange = 0;
+volatile float32_t lidarIntensity = 0;
 volatile uint32_t lidarUpdateTime = 0;
 volatile float32_t motorCurrentSpeedVal = 0;
 volatile float32_t motorCurrentPositionVal = 0; // Value for the current motor position reading
@@ -232,6 +254,8 @@ const char* motorEnergise_id = "motorEnergise";
 const char* steering_id = "steering_angle";
 const char* motorOperationState_id = "motorOperationState";
 const char* musicLights_id = "musicLights";
+const char* lidar_scan_enable_id = "lidarScan";
+const char* lidar_scan_id = "laser_scan";
 const char* ackermann_id = "ackermann_cmd";
 
 ros::NodeHandle rosNodeHandler;
@@ -293,7 +317,7 @@ void processLEDLoop()
 				level = (uint8_t)((peak < 0.25) ? 0x00 : peak * 0xFF);
 			}
 
-			if (musicLights)
+			if (musicLightsMode)
 			{
 				mouthColour = CRGB::Black;
 				odroidColour = CRGB::Black;
@@ -378,27 +402,13 @@ char* string2char(String command)
 		return nullptr;
 }
 
-// Sends a "Reset command timeout" command to the Tic.  We must
-// call this at least once per second, or else a command timeout
-// error will happen.  The Tic's default command timeout period
-// is 1000 ms, but it can be changed or disabled in the Tic
-// Control Center.
-void resetCommandTimeout()
+// Resets teh TIC motor controller command timeout
+// and runs the spinOnce function of RoS
+void spinResetCommandTimeout()
 {
+	rosNodeHandler.spinOnce();
 	tic.resetCommandTimeout();
-}
-
-// Delays for the specified number of milliseconds while
-// resetting the Tic's command timeout so that its movement does
-// not get interrupted by errors.
-void delayWhileResettingCommandTimeout(uint32_t ms)
-{
-	uint32_t start = millis();
-	do
-	{
-		resetCommandTimeout();
-		rosNodeHandler.spinOnce();
-	} while ((uint32_t)(millis() - start) <= ms);
+	delay(1);
 }
 
 //#################################################################################################
@@ -416,10 +426,12 @@ std_msgs::String motorEmergencyStop_msg;
 std_msgs::String motorCurrentOperationState_msg;
 sensor_msgs::Imu bodyImu_msg;
 sensor_msgs::JointState joint_state_msg;
+sensor_msgs::LaserScan laser_scan_msg;
 
 // RoS Publishers
 ros::Publisher pubOdometry(odometry_id, &odometry_msg);
 ros::Publisher pubLidar(lidar_id, &lidar_msg);
+ros::Publisher pubLidarScan(lidar_scan_id, &lidar_scan_msg);
 ros::Publisher pubUltrasonicFront(ultrasonic_front_id, &ultrasonic_front_msg);
 ros::Publisher pubUltrasonicRear(ultrasonic_rear_id, &ultrasonic_rear_msg);
 ros::Publisher pubMotorCurrentSpeed(motorCurrentSpeed_id, &motorCurrentSpeed_msg);
@@ -433,26 +445,33 @@ void publishLidar()
 {
 	if (micros() - lidarUpdateTime <= 100000)
 	{
-		lidar_msg.header.stamp = rosNodeHandler.now();
 		lidar_msg.header.frame_id = lidar_id;
+		lidar_msg.header.stamp = rosNodeHandler.now();
 
 		// Check if its had an update since last time.
 		// If it hasn't set the lidar to 0.
 		lidar_msg.range = lidarRange / 100;
-
-		lidar_msg.field_of_view = 0.04;
-		lidar_msg.max_range = 12.0;
-		lidar_msg.min_range = 0.3;
+		lidar_msg.field_of_view = LIDAR_FIELD_OF_VIEW;
+		lidar_msg.max_range = LIDAR_MAX_RANGE;
+		lidar_msg.min_range = LIDAR_MIN_RANGE;
 		lidar_msg.radiation_type = lidar_msg.INFRARED;
 
 		pubLidar.publish(&lidar_msg);
 	}
 }
 
+void publishLidarScan()
+{
+	if (sendLidarMsg)
+	{
+		sendLidarMsg = false;
+
+		pubLidarScan.publish(&lidar_scan_msg);
+	}
+}
+
 void publishJointState()
 {
-	float headPosition[2];
-
 	joint_state_msg.header.frame_id = joint_states_id;
 	joint_state_msg.header.stamp = rosNodeHandler.now();
 
@@ -722,9 +741,9 @@ void servoMove(uint8_t servo, int16_t percent)
 void steering_cb(const std_msgs::Float32& cmd_msg)
 {
 	// Convert radians to -100% to 100%
-	int16_t percent = static_cast<int16_t>(-cmd_msg.data / (SteeringRange / (180.0 / PI))*100);
+	int16_t percent = static_cast<int16_t>(-cmd_msg.data / (STEERING_RANGE / (180.0 / PI))*100);
 
-	servoMove(steering, percent);
+	servoMove(STEERING, percent);
 	rosNodeHandler.loginfo("steering set");
 	logSD("steering: " + String((float32_t)cmd_msg.data));
 }
@@ -732,20 +751,34 @@ void steering_cb(const std_msgs::Float32& cmd_msg)
 // Head Tilt RoS Handler
 void headTilt_cb(const std_msgs::Int16& cmd_msg)
 {
-	servoMove(headTilt, cmd_msg.data);
-	rosNodeHandler.loginfo("headTilt set");
-	headTiltRadians = cmd_msg.data * -0.006981; // convert % to rad
-	logSD("headTilt: " + String((int16_t)cmd_msg.data));
+	if (!lidarScanMode)
+	{
+		servoMove(HEAD_TILT, cmd_msg.data);
+		rosNodeHandler.loginfo("headTilt set");
+		headTiltRadians = cmd_msg.data * -0.006981; // convert % to rad
+		logSD("headTilt: " + String((int16_t)cmd_msg.data));
+	}
+	else
+	{
+		logSD("headTilt command inactive. In LIDAR scan mode");
+	}
 }
 
 // Head Pan RoS Handler
 void headPan_cb(const std_msgs::Int16& cmd_msg)
 {
-	servoMove(headPan, cmd_msg.data);
-	rosNodeHandler.loginfo("headPan set");
+	if (!lidarScanMode)
+	{
+		servoMove(HEAD_PAN, cmd_msg.data);
+		rosNodeHandler.loginfo("headPan set");
 	
-	headPanRadians = cmd_msg.data * -0.006981; // convert % to rad
-	logSD("headPan: " + String((int16_t)cmd_msg.data));
+		headPanRadians = cmd_msg.data * -0.006981; // convert % to rad
+		logSD("headPan: " + String((int16_t)cmd_msg.data));
+	}
+	else
+	{
+		logSD("headPan command inactive. In LIDAR scan mode");
+	}
 }
 
 // Command handler for setting and resetting the motor emergency stop
@@ -863,11 +896,18 @@ void motorOperationState_cb(const std_msgs::Bool& cmd_msg)
 	publishMotorCurrentOperationState();
 }
 
+void lidarScan_cb(const std_msgs::Bool& cmd_msg)
+{
+	lidarScanMode = cmd_msg.data;
+	rosNodeHandler.loginfo("LIDAR Scan Mode: " + (lidarScanMode) ? "On" : "Off");
+	logSD("LIDAR Scan Mode: " + (lidarScanMode) ? "On" : "Off");
+}
+
 void musicLights_cb(const std_msgs::Bool& cmd_msg)
 {
-	musicLights = cmd_msg.data;
-	rosNodeHandler.loginfo("Music Lights: " + (musicLights) ? "On" : "Off");
-	logSD("Music Lights: " + (musicLights) ? "On" : "Off");
+	musicLightsMode = cmd_msg.data;
+	rosNodeHandler.loginfo("Music Lights: " + (musicLightsMode) ? "On" : "Off");
+	logSD("Music Lights: " + (musicLightsMode) ? "On" : "Off");
 }
 
 void ackermann_cb(const ackermann_msgs::AckermannDriveStamped& cmd_msg)
@@ -909,6 +949,7 @@ ros::Subscriber<std_msgs::Bool>  subMotorEnergise(motorEnergise_id, motorEnergis
 ros::Subscriber<std_msgs::Float32> subSteering(steering_id, steering_cb);
 ros::Subscriber<std_msgs::Bool>  subMotorOperationState(motorOperationState_id, motorOperationState_cb);
 ros::Subscriber<std_msgs::Bool>  subMusicLights(musicLights_id, musicLights_cb);
+ros::Subscriber<std_msgs::Bool>  subLidarScan(lidar_scan_enable_id, lidarScan_cb);
 
 //#################################################################################################
 // Timer Loops
@@ -969,15 +1010,124 @@ void imuLoop()
 	}
 }
 
-void rangeLoop()
+void lidarLoop()
 {
 	if (frontLidar.available())
 	{
 		float distance = frontLidar.getDistance();
-		if (distance > 0) lidarRange = distance; // Distance in cm
+		float strength = frontLidar.getStrength();
+
+		if (distance >= LIDAR_MIN_RANGE*100 && distance < LIDAR_MAX_RANGE*100)
+		{
+			lidarRange = distance; // Distance in cm
+			lidarIntensity = frontLidar.getStrength();
+		}
 		lidarUpdateTime = micros();
 	}
-	
+
+	if (lidarScanMode)
+	{
+		switch (lidarScanState)
+		{
+		case LidarScanState::Start:
+			// Move head to the left and level
+			servoMove(HEAD_PAN, -100);
+			servoMove(HEAD_TILT, 0);
+			headTiltRadians = 0;
+			headPanRadians = 0.6981; // 100% left in rad
+			lidar_counter = 0;
+			lidarInitialiseWait = millis() + 1000;
+			lidarScanState = LidarScanState::Initialising;
+			
+			break;
+
+		case LidarScanState::Initialising:
+			// Wait for 1 second
+			if (millis() >= lidarInitialiseWait)
+			{
+				lidarScanState = LidarScanState::BeginScanning;
+			}
+
+			break;
+
+		case LidarScanState::BeginScanning:
+			temp_lidar_scan_msg.header.frame_id = lidar_scan_id;
+			temp_lidar_scan_msg.header.stamp = rosNodeHandler.now();
+
+			temp_lidar_scan_msg.angle_increment = ((float)HEAD_PAN_RANGE * 2.0) / (float)LIDAR_HEAD_PAN_STEPS * 0.0174533; // radians per step;
+			temp_lidar_scan_msg.angle_max = (float)HEAD_PAN_RANGE * 0.0174533; // convert deg to rad
+			temp_lidar_scan_msg.angle_min = -(float)HEAD_PAN_RANGE * 0.0174533; // convert deg to rad
+
+			temp_lidar_scan_msg.ranges_length = LIDAR_HEAD_PAN_STEPS;
+			temp_lidar_scan_msg.intensities_length = LIDAR_HEAD_PAN_STEPS;
+
+			temp_lidar_scan_msg.range_min = LIDAR_MIN_RANGE;
+			temp_lidar_scan_msg.range_max = LIDAR_MAX_RANGE;
+
+			temp_lidar_scan_msg.ranges = new float[LIDAR_HEAD_PAN_STEPS];
+			temp_lidar_scan_msg.intensities = new float[LIDAR_HEAD_PAN_STEPS];
+			
+			addScanData();
+
+			lidarScanState = LidarScanState::Scanning;
+
+			break;
+
+		case LidarScanState::Scanning:
+			addScanData();
+
+			if (lidar_counter == LIDAR_HEAD_PAN_STEPS)
+				lidarScanState = LidarScanState::EndScanning;
+
+			break;
+
+		case LidarScanState::EndScanning:
+			lidar_scan_msg = temp_lidar_scan_msg; // Copy over to send
+			temp_lidar_scan_msg = *(new sensor_msgs::LaserScan()); // Create a new instance for saving scans
+			temp_lidar_scan_msg.scan_time = (float)(rosNodeHandler.now().toNsec() - lidar_scan_msg.header.stamp.toNsec()) / 1000000000.0;
+			temp_lidar_scan_msg.time_increment = temp_lidar_scan_msg.scan_time / (float)LIDAR_HEAD_PAN_STEPS;
+			lidarScanState = LidarScanState::Start;
+			sendLidarMsg = true;
+			lidarScanState = LidarScanState::Start;
+			
+			break;
+
+		default:
+			break;
+		}
+	}
+	else
+	{
+		lidarScanState = LidarScanState::Start;
+	}
+}
+
+void addScanData()
+{
+	// The range data must be <12 meters, >= 0.3 meters and stregth > 20% (20) for it to be valid
+	if (lidarRange >= LIDAR_MIN_RANGE * 100.0 && lidarRange < LIDAR_MAX_RANGE * 100.0)
+	{
+		temp_lidar_scan_msg.ranges[lidar_counter] = lidarRange / 100; // convert to meters
+		temp_lidar_scan_msg.intensities[lidar_counter] = lidarIntensity;
+	}
+	else
+	{
+		temp_lidar_scan_msg.ranges[lidar_counter] = 0;
+		temp_lidar_scan_msg.intensities[lidar_counter] = 0;
+	}
+
+	lidar_counter++;
+
+	scan_angle = -100 + (LIDAR_HEAD_PAN_STEP * lidar_counter);
+	servoMove(HEAD_PAN, scan_angle);
+	headPanRadians = scan_angle * -0.006981; // convert % to rad
+
+	if (lidar_counter == LIDAR_HEAD_PAN_STEPS)
+		lidarScanState = LidarScanState::EndScanning;
+}
+
+void rangeLoop()
+{
 	uint32_t start = millis();
 
 	while (Serial5.available() && millis() - start <= 10)
@@ -999,22 +1149,11 @@ void rangeLoop()
 			rearUltrasonicTimestamp = millis();
 		}
 	}
-		
+
 	if (millis() - start > 30)
 	{
 		logSD("Serial5 (Ultrasonic) timed out.");
 	}
-}
-
-// Perfornm a scan by panning the Lidar from lidarScanLeft2Right (true) or lidarScanRight2Left (false)
-void lidarScan(int rate, bool direction)
-{
-
-}
-
-void lidarScanLoop()
-{
-
 }
 
 // Run every 100mS (10Hz)
@@ -1034,6 +1173,9 @@ void publishRosDataLoop()
 		
 		// Get the lidar data.
 		publishLidar();
+
+		// Get the lidar scan data.
+		publishLidarScan();
 
 		// Publish the head joint position
 		publishJointState();
@@ -1055,8 +1197,6 @@ void publishRosDataLoop()
 		{
 			rosNodeHandler.logerror("Motor driver error");
 		}
-
-		rosNodeHandler.spinOnce();
 
 		// Check the motor voltage
 		if (tic.getErrorStatus() & (uint16_t)TicError::LowVin)
@@ -1082,7 +1222,7 @@ void setup()
 
 	//AudioMemory(12);
 	// Removed above due to issues in Teensy Audio libery
-	AudioStream::initialize_memory(audioMemoryBlock, memoryBlockSize);
+	AudioStream::initialize_memory(audioMemoryBlock, MEMORY_BLOCK_SIZE);
 
 	fft1.averageTogether(8);
 
@@ -1284,9 +1424,9 @@ void setup()
 	microsPrevious = micros();
 
 	logSD("Initialise Servos");
-	servoMove(steering, 0);
-	servoMove(headPan, 0);
-	servoMove(headTilt, 0);
+	servoMove(STEERING, 0);
+	servoMove(HEAD_PAN, 0);
+	servoMove(HEAD_TILT, 0);
 
 	tic.setStartingSpeed(0);
 	tic.clearDriverError();
@@ -1314,10 +1454,12 @@ void setup()
 	rosNodeHandler.subscribe(subSteering);
 	rosNodeHandler.subscribe(subMotorOperationState);
 	rosNodeHandler.subscribe(subMusicLights);
+	rosNodeHandler.subscribe(subLidarScan);
 	rosNodeHandler.subscribe(subAckermann);
 
 	logSD("Initialise Node Handler Publishers");
 	rosNodeHandler.advertise(pubLidar);
+	rosNodeHandler.advertise(pubLidarScan);
 	rosNodeHandler.advertise(pubUltrasonicFront);
 	rosNodeHandler.advertise(pubUltrasonicRear);
 	rosNodeHandler.advertise(pubMotorCurrentSpeed);
@@ -1340,13 +1482,9 @@ void setup()
 
 	// IMU Timer is 100Hz
 	imuTimer.priority(120);
-	imuTimer.begin(imuLoop, 10000);
+	imuTimer.begin(imuLoop, 1000000 / IMU_LOOP_HZ);
 
 	logSD("Starting LIDAR and Ultrasonic Loop");
-
-	// LIDAR and Ultrasonic updates is 20Hz
-	rangeTimer.priority(118);
-	rangeTimer.begin(rangeLoop, 50000);
 
 	// Set up the odemetry time
 	odom_current_millis = millis();
@@ -1360,23 +1498,17 @@ void setup()
 //#################################################################################################
 
 void loop()
-{		
-	rosNodeHandler.spinOnce();
-	delayWhileResettingCommandTimeout(100);
+{	
+	uint32_t finish = millis() + (1000 / MAIN_LOOP_HZ);
+
+	lidarLoop();
+	rangeLoop();
 	publishRosDataLoop();
 	processLEDLoop();
-
-	// Check if we need to do an emergency stop
-	if (lidarRange < 0.3 && lidarRange > 0 && !motorEmergencyStopVal)
+	spinResetCommandTimeout();
+	
+	while (millis() < finish)
 	{
-		publishMotorEmergencyStop(true, "Motor Emergency Stop - LIDAR");
-		logSD("Motor Emergency Stop Activated");
+		spinResetCommandTimeout();
 	}
-	else if (lidarRange >= 0.3 && motorEmergencyStopVal)
-	{
-		publishMotorEmergencyStop(false, "Motor Emergency Stop Deactivated - LIDAR");
-		logSD("Motor Emergency Stop Deactivated");
-	}
-
-	delay(1);
 }
