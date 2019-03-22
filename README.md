@@ -47,6 +47,8 @@ https://youtu.be/b_HMtGfrs7E
 ![Rviz with the Teleop terminal](/documentation/RoT-rviz.png)
 A short clip of RoT running in the Rviz application on Youtube.
 https://youtu.be/lAinIkkNIuQ
+Another with teh stereo images and disparity (depth) map image.
+https://youtu.be/ZktRqChj550
 
 ### RoTVision
 The RoTVision board processes the stereo images from the cameras. It consists of a Raspberry Pi Compute Module CM3b+ (16Gb) with stereo cameras. I used a USB hub with an ethernet connection to connect it to the Odroid XU4.  
@@ -139,12 +141,5 @@ The stereo cameras on the Raspberry Pi Compute Module has a special configuratio
 - [x] Check the controller transformations
 - [x] Fix the URDF mapping to RoT messages
 - [x] Implement LIDAR Scanning on the Teensy controller
-<<<<<<< HEAD
 - [x] Implement the depth and stereo image messages fro the Raspberry Pi stereo comeras
 - [ ] Integrate with Alexa voice services
-=======
-- [ ] Implement the depth and stereo image messages from the Raspberry Pi stereo cameras
-- [ ] Implement the ackermann steering planner (teb_local_planner)
-- [ ] Integrate with AWS RoboMaker
-- [ ] Integrate with Alexa
->>>>>>> origin/master
