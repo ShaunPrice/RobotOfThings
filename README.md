@@ -139,5 +139,12 @@ The stereo cameras on the Raspberry Pi Compute Module has a special configuratio
 - [x] Check the controller transformations
 - [x] Fix the URDF mapping to RoT messages
 - [x] Implement LIDAR Scanning on the Teensy controller
+<<<<<<< HEAD
 - [x] Implement the depth and stereo image messages fro the Raspberry Pi stereo comeras
 - [ ] Integrate with Alexa voice services
+=======
+- [ ] Implement the depth and stereo image messages from the Raspberry Pi stereo cameras
+- [ ] Implement the ackermann steering planner (teb_local_planner)
+- [ ] Integrate with AWS RoboMaker
+- [ ] Integrate with Alexa
+>>>>>>> origin/master
