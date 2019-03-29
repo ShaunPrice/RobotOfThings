@@ -83,29 +83,29 @@ Configure forwarding for RoT Vision (rotvision):
 **Note:**
 The following is adapted from https://askubuntu.com/questions/1050816/ubuntu-18-04-as-a-router
 
-1. first, enable ufw and ufw logging
+Enable ufw and ufw logging
 
     sudo ufw enable
     sudo ufw logging on
 
-2. Flush any existing rules (do NOT do this if you are already using ufw or IP tables for firewalling). Delete and flush. Default table is "filter". Others like "nat" must be explicitly stated.
+Flush any existing rules (do NOT do this if you are already using ufw or IP tables for firewalling). Delete and flush. Default table is "filter". Others like "nat" must be explicitly stated.
 
     iptables --flush            # Flush all the rules in filter and nat tables    
     iptables --table nat --flush    
     iptables --delete-chain     # Delete all chains that are not in default filter and nat table    
     iptables --table nat --delete-chain    
 
-3. First, packet forwarding needs to be enabled in ufw. Two configuration files will need to be adjusted, in /etc/default/ufw change the DEFAULT_FORWARD_POLICY to “ACCEPT”:
+Packet forwarding needs to be enabled in ufw. Two configuration files will need to be adjusted, in /etc/default/ufw change the DEFAULT_FORWARD_POLICY to “ACCEPT”:
 
     DEFAULT_FORWARD_POLICY="ACCEPT"
 
-4. Then edit /etc/ufw/sysctl.conf and uncomment:
+Edit /etc/ufw/sysctl.conf and uncomment:
 
     net/ipv4/ip_forward=1
     net/ipv4/conf/all/forwarding=1 
     net/ipv6/conf/default/forwarding=1 # if using IPv6
 
-5. Now add rules to the /etc/ufw/before.rules file. The default rules only configure the filter table, and to enable masquerading the nat table will need to be configured. Add the following to the top of the file just after the header comments:
+Add rules to the /etc/ufw/before.rules file. The default rules only configure the filter table, and to enable masquerading the nat table will need to be configured. Add the following to the top of the file just after the header comments:
 
     # nat Table rules
     *nat
@@ -117,7 +117,7 @@ The following is adapted from https://askubuntu.com/questions/1050816/ubuntu-18-
 
 For each Table a corresponding COMMIT statement is required. In these examples only the nat and filter tables are shown, but you can also add rules for the raw and mangle tables.
 
-6. Finally, disable and re-enable ufw to apply the changes:
+Disable and re-enable ufw to apply the changes:
 
     sudo ufw disable && sudo ufw enable
 
