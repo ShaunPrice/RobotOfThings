@@ -72,18 +72,28 @@ The two boards need to talk to each other and the RoT Vision board needs to talk
 
 I've implemented the robot network by having the RoTVision board default to the home network using DHCP. If it can't find that it drops back to a static IP that's connected to the RoT controller board (the normal mode of operation).
 
-####The Router####
+#### The Router ####
 The RoT controller (Odroid XU4) is the network router for the robot. I've implemented the ethernet connections as follows:
     
     Eth0 is the external network gateway (USB Ethernet connection)
     Eth1 is the internal network (Onboard Network onnection)
+
+
+Add the host names to the Odroids host file:
+
+    sudo nano /etc/hosts
+
+Add:
+
+    127.0.1.1	rot
+    10.1.0.2	rotvision
 
 Configure forwarding for RoT Vision (rotvision):
 
 **Note:**
 The following is adapted from https://askubuntu.com/questions/1050816/ubuntu-18-04-as-a-router
 
-Enable ufw and ufw logging
+Enable ufw and ufw logging:
 
     sudo ufw enable
     sudo ufw logging on
@@ -95,17 +105,19 @@ Flush any existing rules (do NOT do this if you are already using ufw or IP tabl
     iptables --delete-chain     # Delete all chains that are not in default filter and nat table    
     iptables --table nat --delete-chain    
 
-Packet forwarding needs to be enabled in ufw. Two configuration files will need to be adjusted, in /etc/default/ufw change the DEFAULT_FORWARD_POLICY to “ACCEPT”:
+Packet forwarding needs to be enabled in ufw. Two configuration files will need to be adjusted, in **/etc/default/ufw** change the DEFAULT_FORWARD_POLICY to “ACCEPT”:
 
     DEFAULT_FORWARD_POLICY="ACCEPT"
 
-Edit /etc/ufw/sysctl.conf and uncomment:
+Edit **/etc/ufw/sysctl.conf** and uncomment:
 
     net/ipv4/ip_forward=1
     net/ipv4/conf/all/forwarding=1 
     net/ipv6/conf/default/forwarding=1 # if using IPv6
 
-Add rules to the /etc/ufw/before.rules file. The default rules only configure the filter table, and to enable masquerading the nat table will need to be configured. Add the following to the top of the file just after the header comments:
+Add rules to the **/etc/ufw/before.rules** file. The default rules only configure the filter table, and to enable masquerading the nat table will need to be configured.
+
+Add the following to the top of the file just after the header comments:
 
     # nat Table rules
     *nat
@@ -122,16 +134,6 @@ Disable and re-enable ufw to apply the changes:
     sudo ufw disable && sudo ufw enable
 
 IP Masquerading should now be enabled. You can also add any additional FORWARD rules to the /etc/ufw/before.rules. It is recommended that these additional rules be added to the ufw-before-forward chain.
-
-Add the host names to the Odroids host file:
-
-    sudo nano /etc/hosts
-
-Add:
-
-    127.0.1.1	rot
-    10.1.0.2	rotvision
-
 
 ####RoTVision IP Configuration####
 On the RoTVision board (Raspberry Pi Compute) with Raspbian Stretch installed Eth0 is the network interface to route through and we'll make it's IP Address 10.1.0.2. The Odroid is 10.1.0.1.
