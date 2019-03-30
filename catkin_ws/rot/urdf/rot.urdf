@@ -116,6 +116,15 @@
         <material name="white" />
     </visual>	
 </link>
+<!-- Same as the left camera -->
+<link name="stereo/pointcloud">
+    <visual>
+        <geometry>
+            <cylinder radius="0.0025" length="0.002"/>
+        </geometry>
+        <material name="black" />
+    </visual>	
+</link>
 <link name="cameraLeft">
     <visual>
         <geometry>
@@ -244,6 +253,12 @@
     <origin xyz="0.045 0.0 0.03" rpy="0 0 0"/>
     <parent link="headBracket3"/>
     <child link="cameraUnit"/>
+</joint>
+<!-- Same as the left camera -->
+<joint name="pointcloud_link" type="fixed">
+    <origin xyz="0.004 -0.035 0.0" rpy="0 1.5708 0"/>
+    <parent link="cameraUnit"/>
+    <child link="stereo/pointcloud"/>
 </joint>
 <joint name="cameraLeft_link" type="fixed">
     <origin xyz="0.004 -0.035 0.0" rpy="0 1.5708 0"/>
