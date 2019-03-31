@@ -157,8 +157,8 @@ class Disparity:
         print("Creating the Stereo Matcher")
         # SGBM Parameters -----------------
         window_size = 5      # 5      # wsize default 3; 5; 7 for SGBM reduced size image; 15 for SGBM full size image (1300px and above); 5 Works nicely
-        min_disp = -48                # -48 for 320x240 and 240x180, -96 for 640x480
-        num_disp = 48-min_disp        # 48 for 320x240 and 240x180, 96 for 640x480
+        min_disp = -48                # -48 - must be devisible by 16 
+        num_disp = -min_disp-min_disp #  48*2 - must be devisible by 16
 
         self.left_matcher = cv2.StereoSGBM_create(
                 minDisparity=min_disp,
@@ -167,7 +167,7 @@ class Disparity:
                 P1=8 * 3 * window_size ** 2,   # wsize default 3; 5; 7 for SGBM reduced size image; 15 for SGBM full size image (1300px and above); 5 Works nicely
                 P2=32 * 3 * window_size ** 2,
                 disp12MaxDiff=-1,
-                uniquenessRatio=5,  # 1
+                uniquenessRatio=1,  # 1
                 speckleWindowSize=0,
                 speckleRange=2,
                 preFilterCap=7,
@@ -230,7 +230,7 @@ class Disparity:
 
                     leftImageRectifiedRotated = cv2.rotate(leftImageRectified, cv2.ROTATE_180)
                     rightImageRectifiedRotated = cv2.rotate(rightImageRectified, cv2.ROTATE_180)
-
+                    
                     ################################################################
                     # Now we can compute the disparities and convert the resulting images to the desired int16 format or how OpenCV names it: CV_16S for our filter:
                     displ = self.left_matcher.compute(leftImageRectifiedRotated, rightImageRectifiedRotated)  # .astype(np.float32)/16
@@ -257,7 +257,7 @@ class Disparity:
                         self.disparity_pub.publish(self.bridge.cv2_to_imgmsg(disparityImg, "mono8"))
                     except CvBridgeError as e:
                         print(e)
-
+                    
                     # Send Rectified Left Greyscale Image
                     try:
                         self.left_pub.publish(self.bridge.cv2_to_imgmsg(leftImageRectified, "mono8"))
@@ -271,7 +271,7 @@ class Disparity:
                         print(e)
 
                     # Create the pointcloud
-                    pointcloudImg = np.rot90(disparityImg)
+                    pointcloudImg = np.rot90(disparityImg) 
                     points = cv2.reprojectImageTo3D(pointcloudImg,self.Q)
                     pointsOut = points.reshape((-1,3))
                     pointsOut = pointsOut / 8 # Convert to meters

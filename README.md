@@ -4,7 +4,7 @@ Code and documentation for my personal experimental robot.
 
 The robot is based on a remote control car base and mostely uses parts I already had (things).
 
-![Robot of Things (RoT)](/documentation/RoT.png)
+![Robot of Things (RoT)](/documentation/RoT.jpg)
 
 **Note:**
 This is not a complete solution. You will also need at least the following packages and many features either won't work or have issues:
@@ -19,7 +19,7 @@ This robot is a personal projct to test robotics, deap learning and vision proce
 
 The robot is based on ROS (http://ros.org) the Robot Operating System. It uses many other people code either as packages or as modified source. I strive to credit the original authors where possible but sometimes miss one. If you notice any code not attributed to it's authore please let me know.
 
-While making this robot I have used many online sites fo information. In no particuular order I have extensively used the following:
+While making this robot I have used many online sites for information. In no particuular order I have extensively used the following:
 
 **ROS** - http://www.ros.org/
 **pyimagesearch** - https://www.pyimagesearch.com
@@ -35,13 +35,23 @@ While making this robot I have used many online sites fo information. In no part
 A short cli of RoT running:
 https://youtu.be/b_HMtGfrs7E
 ![Controller Overview](/documentation/RoT-overview.png)
-
 ### Messages and Transforms
+
+#### ROS Message Graph View
+![ROS ](/documentation/rosgraph.png)
+ROS Command: rqt_graph
+
 #### Frames
-![Transform Tree](/documentation/frames.png)
+![Frames Tree](/documentation/frames.png)
+ROS Command: view_frames
+
+#### Transform Tree
+![Transform Tree PDF](/documentation/tf_tree.png)
+ROS Command: rqt_tf_tree
 
 #### Robot Model (URDF)
-![URDF Tree](/documentation/urdf.png)
+![URDF Tree PDF](/documentation/urdf.png)
+ROS Command: urdf_to_graphiz ~/catkin_ws/src/rot/urdf/rot.urdf
 
 ### Rviz
 ![Rviz with the Teleop terminal](/documentation/RoT-rviz.png)
@@ -173,6 +183,9 @@ You may need to manually add a static default gateway route.
 The stereo cameras on the Raspberry Pi Compute Module has a special configuration to get the camera to work together detailed on the Raspberry Pi site:
 
     https://www.raspberrypi.org/documentation/hardware/computemodule/cmio-camera.md
+
+## Current Issues
+1. The point cloud implementation works but is not scaled to real world units.
 
 ## TODO
 - [ ] Complete the readme (this document)
