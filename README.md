@@ -35,6 +35,7 @@ While making this robot I have used many online sites for information. In no par
 A short cli of RoT running:
 https://youtu.be/b_HMtGfrs7E
 ![Controller Overview](/documentation/RoT-overview.png)
+[PDF: ](/documentation/pdf/RoT-overview.pdf)
 ### Messages and Transforms
 
 #### ROS Message Graph View
@@ -43,21 +44,23 @@ ROS Command: rqt_graph
 
 #### Frames
 ![Frames Tree](/documentation/frames.png)
+[PDF: ](/documentation/pdf/frames.pdf)
 ROS Command: view_frames
 
 #### Transform Tree
-![Transform Tree PDF](/documentation/tf_tree.png)
+![Transform Tree](/documentation/tf_tree.png)
 ROS Command: rqt_tf_tree
 
 #### Robot Model (URDF)
 ![URDF Tree PDF](/documentation/urdf.png)
+[PDF: ](/documentation/pdf/urdf.pdf)
 ROS Command: urdf_to_graphiz ~/catkin_ws/src/rot/urdf/rot.urdf
 
 ### Rviz
 ![Rviz with the Teleop terminal](/documentation/RoT-rviz.png)
 A short clip of RoT running in the Rviz application on Youtube.
 https://youtu.be/lAinIkkNIuQ
-Another with teh stereo images and disparity (depth) map image.
+Another with the stereo images and disparity (depth) map image.
 https://youtu.be/ZktRqChj550
 
 ### RoTVision
