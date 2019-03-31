@@ -35,7 +35,8 @@ While making this robot I have used many online sites for information. In no par
 A short cli of RoT running:
 https://youtu.be/b_HMtGfrs7E
 ![Controller Overview](/documentation/RoT-overview.png)
-[PDF: ](/documentation/pdf/RoT-overview.pdf)
+PDF: [RoT-overview.pdf](/documentation/pdf/RoT-overview.pdf)
+
 ### Messages and Transforms
 
 #### ROS Message Graph View
@@ -44,7 +45,8 @@ ROS Command: rqt_graph
 
 #### Frames
 ![Frames Tree](/documentation/frames.png)
-[PDF: ](/documentation/pdf/frames.pdf)
+PDF: [frames.pdf](/documentation/pdf/frames.pdf)
+
 ROS Command: view_frames
 
 #### Transform Tree
@@ -53,7 +55,8 @@ ROS Command: rqt_tf_tree
 
 #### Robot Model (URDF)
 ![URDF Tree PDF](/documentation/urdf.png)
-[PDF: ](/documentation/pdf/urdf.pdf)
+ODF: [urdf.pdf](/documentation/pdf/urdf.pdf)
+
 ROS Command: urdf_to_graphiz ~/catkin_ws/src/rot/urdf/rot.urdf
 
 ### Rviz
