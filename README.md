@@ -150,6 +150,25 @@ Add the following forwarding rules to the iptables:
     sudo iptables -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
     sudo iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
     
+To store the iptable rules persistently install the following package:
+	
+    sudo apt-get install iptables-persistent
+
+The setup will ask you to save the Version 4 and 6 IP rules in the following default files which will be used later:
+
+    /etc/iptables/rules.v4
+    /etc/iptables/rules.v6
+
+You can save rules added later with:
+
+    sudo sh -c "iptables-save > /etc/iptables/rules.v4"
+    sudo sh -c "iptables-save > /etc/iptables/rules.v6"
+    
+Add the following to the end of the /etc/network/interfaces file to restore the rules at boot:
+
+    pre-up iptables-restore < /etc/iptables/rules.v4
+    pre-up iptables-restore < /etc/iptables/rules.v6
+    
 Don't forget to add any other firewall rules you require. I use ssh and xrdp so add the following:
 
     sudo ufw allow 22/tcp
