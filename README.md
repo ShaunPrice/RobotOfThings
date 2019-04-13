@@ -145,6 +145,11 @@ Add the following to the top of the file just after the header comments:
 
 For each Table a corresponding COMMIT statement is required. In these examples only the nat and filter tables are shown, but you can also add rules for the raw and mangle tables.
 
+Don't forget to add any other firewall rules you require. I use ssh and xrdp so add the following:
+
+    sudo ufw allow 22/tcp
+    sudo ufw allow 3389/tcp
+
 Disable and re-enable ufw to apply the changes:
 
     sudo ufw disable && sudo ufw enable
