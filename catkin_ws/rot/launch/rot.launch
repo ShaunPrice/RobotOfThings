@@ -9,12 +9,39 @@
         <param name="port" value="/dev/ttyACM0"/>
         <param name="baud" value="10000000"/>
     </node>
-    <include file="$(find tts)/launch/tts_polly.launch" >
-        <!-- The configuration can either be passed in using the "config_file" parameter or
-                by using a rosparam tag to load the config into the parameter server -->
-        <arg name="config_file" value="$(arg config_file)"/>
-    </include>
-    <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
 
+
+  <!-- Default ROS output location, set this to 'log' to write stdout to a log file instead of the screen -->
+  <arg name="output" default="log" />
+  <arg name="lex_node_name" value="lex_node"/>
+  <include file="$(find lex_node)/launch/lex_node.launch">
+    <arg name="config_file" value="$(find rot)/config/rot_lex.yaml"/>
+    <arg name="node_name" value="$(arg lex_node_name)"/>
+    <arg name="output" value="$(arg output)"/>
+   </include>
+
+  <include file="$(find tts)/launch/tts_polly.launch" >
+    <!-- The configuration can either be passed in using the "config_file" parameter or
+         by using a rosparam tag to load the config into the parameter server -->
+    <arg name="config_file" value="$(arg config_file)"/>
+  </include>
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+  <remap from="/voice_interaction_node/text_output" to="/text_output" />
+  <remap from="/voice_interaction_node/audio_output" to="/audio_output" />
+  <node pkg="rot" type="voice_interaction" name="voice_interaction" output="$(arg output)"/>
+  <node pkg="rot" type="voice_command_translator" name="voice_command_translator" output="$(arg output)"/>
+
+  <arg name="use_microphone" default="false"/>
+  <group if="$(arg use_microphone)">
+    <remap from="/voice_input_node/audio_input" to="/audio_input" />
+    <node pkg="rot" type="voice_input" name="voice_input" output="$(arg output)"/>
+  </group>
+
+  <arg name="use_speaker" default="true"/>
+  <group if="$(arg use_speaker)">
+    <node pkg="rot" type="voice_output" name="voice_output" output="$(arg output)"/>
+    <node pkg="rot" type="audio_output" name="audio_output" output="$(arg output)"/>
+  </group>
 </launch>
