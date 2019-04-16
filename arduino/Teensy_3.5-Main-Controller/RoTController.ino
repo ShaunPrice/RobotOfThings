@@ -878,7 +878,7 @@ void motorPosition_cb(const std_msgs::Float32& cmd_msg)
 
 	if (!motorEmergencyStopVal)
 	{
-		float32_t motorPosition = (int32_t)cmd_msg.data * 9000.00 / 0.22305;;
+		float32_t motorPosition = (float32_t)cmd_msg.data * 9000.00 / 0.22305;;
 		tic.setTargetPosition((int32_t)motorPosition);
 		String message = "motorPosition set to " + String((int32_t)motorPosition);
 		rosNodeHandler.loginfo(string2char(message));
