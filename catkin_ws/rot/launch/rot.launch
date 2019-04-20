@@ -10,9 +10,8 @@
         <param name="baud" value="10000000"/>
     </node>
 
-
   <!-- Default ROS output location, set this to 'log' to write stdout to a log file instead of the screen -->
-  <arg name="output" default="log" />
+  <arg name="output" default="screen" doc="ROS stdout output location (log/screen)"/>
   <arg name="lex_node_name" value="lex_node"/>
   <include file="$(find lex_node)/launch/lex_node.launch">
     <arg name="config_file" value="$(find rot)/config/rot_lex.yaml"/>

@@ -52,6 +52,7 @@ catkin_package(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
+  scripts/alexaop.py  
   scripts/joyop.py
   scripts/keyop.py
   scripts/textop.py
