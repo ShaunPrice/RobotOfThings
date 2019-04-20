@@ -88,7 +88,9 @@ source /opt/ros/melodic/setup.bash
 ### Amazon Alexa Integration
 
 The Amazon Alexa integration is performed using an Alexa Skill (custom personal, not public). An invocation model is set up for the skill that translates utterances (control sentences) into predefined control messages that get sent to a custom [!AWS Lamba](https://aws.amazon.com/lambda/) function. This function translates the Amazon Alexa messages into a format identical to the [!AWS LEX](https://aws.amazon.com/lex/) format that the robot already processes in the code supplied with the AWS RoboMaker [!LEX ROS package](https://github.com/aws-robotics/lex-ros1). The message is placed on the [!AWS SQS simple queue service](https://aws.amazon.com/sqs/) ready for the robot to pick up and act on. The queue does not keep messages more than 60 seconds to ensure messages are relatively new.
-   
+
+Video of RoT being controlled via the Amazon Alexa services using the custom skill.
+https://youtu.be/6S--BAtG19I
 
 ### Connecting the network between the boards (RoT and RoTVision)
 
