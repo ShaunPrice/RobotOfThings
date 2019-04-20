@@ -21,16 +21,13 @@ This node processes fulfilled commands from lex and turns them into robot comman
 """
 
 import subprocess
-import numpy as np
 import rospy
 from voice_interaction_robot_msgs.msg import FulfilledVoiceCommand
-#from geometry_msgs.msg import Twist
 from ackermann_msgs.msg import AckermannDriveStamped
 from std_msgs.msg import Float64
 from std_msgs.msg import Float32
 from std_msgs.msg import Int16
 from std_msgs.msg import Bool
-
 
 class VoiceCommandTranslator:
     slots = []
@@ -44,7 +41,7 @@ class VoiceCommandTranslator:
         self.max_head_tilt_angle = 100 # %
         self.max_head_pan_angle = 100  # %
 
-        self.position = np.float32(0.0)
+        self.position = 0.0
         self.speed = 0.0
         self.steering_angle = 0.0
         self.head_tilt = 0.0
@@ -82,7 +79,7 @@ class VoiceCommandTranslator:
             'music_lights_mode': self.music_lights_handler,
             'play_song': self.play_handler,
             'reset': self.reset_handler,
-            'say_hello': self.introduction_handler,
+            'introduction': self.introduction_handler,
             'scan': self.scan_handler,
             'stop': self.stop_handler,
         }
@@ -114,7 +111,7 @@ class VoiceCommandTranslator:
 
     def hello_handler(self):
         rospy.loginfo("Hello handler")
-        self.process = subprocess.Popen(["rosrun","tts","voicer.py","'Hello! My name is RoT.'"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.process = subprocess.Popen(["rosrun","tts","voicer.py","'Hello!'"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def location_handler(self):
         rospy.loginfo("Location handler")
@@ -144,14 +141,14 @@ class VoiceCommandTranslator:
         self.head_pan_pub.publish(head_pan_cmd_msg)
 
     def move_handler(self):
-        rospy.loginfo("Move handler: Moving %s %s meters",self.slots['move_direction'],self.slots['move_distance'])
-        
-        if self.slots['move_direction'].startswith('backward'):
-            self.position = self.position - np.float32(self.slots['move_distance'])
-        else:
-            self.position = self.position + np.float32(self.slots['move_distance'])
+        moveMeters = float(self.slots['move_distance']) / 100
 
-        rospy.loginfo("New odometer location: %s meters", str(self.position))
+        if self.slots['move_direction'].startswith('backward'):
+            self.position -= moveMeters
+        else:
+            self.position += moveMeters
+
+        rospy.loginfo("Move handler: Moving %s %s meters to odometer %s",self.slots['move_direction'],str(moveMeters), self.position)        
 
         move_cmd_msg = Float32()
         move_cmd_msg = self.position
@@ -166,6 +163,7 @@ class VoiceCommandTranslator:
 
     def reset_handler(self):
         rospy.loginfo("Reset handler")
+        self.process = subprocess.Popen(["rosrun","tts","voicer.py","'Reset'"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         ackermann_cmd_msg = AckermannDriveStamped()
         ackermann_cmd_msg.drive.speed = 0
@@ -190,7 +188,7 @@ class VoiceCommandTranslator:
 
     def introduction_handler(self):
         rospy.loginfo("Introduction handler")
-        self.process = subprocess.Popen(["rosrun","tts","voicer.py","'Hello! My name is RoT. I am the robot of things. I am an experimental platform for developing robots'"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.process = subprocess.Popen(["rosrun","tts","voicer.py","'Hello! My name is RoT. I am the Robot of Things. I'm a development robot for testing of robotics technologies."], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def music_lights_handler(self):
         rospy.loginfo("Music and Lights handler: Mode is %s", self.slots['music_lights'])
