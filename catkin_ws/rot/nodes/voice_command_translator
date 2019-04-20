@@ -1,0 +1,232 @@
+#!/usr/bin/env python
+"""
+ Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ software and associated documentation files (the "Software"), to deal in the Software
+ without restriction, including without limitation the rights to use, copy, modify,
+ merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ permit persons to whom the Software is furnished to do so.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+
+"""
+This node processes fulfilled commands from lex and turns them into robot commands
+"""
+
+import subprocess
+import numpy as np
+import rospy
+from voice_interaction_robot_msgs.msg import FulfilledVoiceCommand
+#from geometry_msgs.msg import Twist
+from ackermann_msgs.msg import AckermannDriveStamped
+from std_msgs.msg import Float64
+from std_msgs.msg import Float32
+from std_msgs.msg import Int16
+from std_msgs.msg import Bool
+
+
+class VoiceCommandTranslator:
+    slots = []
+
+    def __init__(self):
+        rospy.init_node("voice_command_translator")
+        rospy.Subscriber('/voice_interaction_node/fulfilled_command', FulfilledVoiceCommand, self.handle_voice_command)
+
+        self.max_speed = 0.25
+        self.max_steering_angle = 0.35
+        self.max_head_tilt_angle = 100 # %
+        self.max_head_pan_angle = 100  # %
+
+        self.position = np.float32(0.0)
+        self.speed = 0.0
+        self.steering_angle = 0.0
+        self.head_tilt = 0.0
+        self.head_pan = 0.0
+        self.lidarScan = False # False = Off, True = On
+        self.musicLights = False # False = Off, True = On
+        self.reset = False
+
+        cmd_run_topic = 'ackermann_cmd'
+        cmd_head_tilt_topic = 'headTilt'
+        cmd_head_pan_topic = 'headPan'
+        cmd_lidar_topic = 'lidarScan'
+        cmd_music_lights_topic = 'musicLights'
+        cmd_motor_topic = 'motorPosition'
+
+        self.steering_pub = rospy.Publisher(cmd_run_topic, AckermannDriveStamped, queue_size=10)
+        self.motors_pub = rospy.Publisher(cmd_motor_topic, Float32, queue_size=10)
+        self.head_tilt_pub = rospy.Publisher(cmd_head_tilt_topic, Int16, queue_size=10)
+        self.head_pan_pub = rospy.Publisher(cmd_head_pan_topic, Int16, queue_size=10)
+        self.lidar_pub = rospy.Publisher(cmd_lidar_topic, Bool, queue_size=10)
+        self.music_lights_pub = rospy.Publisher(cmd_music_lights_topic, Bool, queue_size=10)
+
+    def run(self):
+        rospy.spin()
+
+    def handle_voice_command(self, command):
+        rospy.logdebug("Fulfilled lex command:")
+        rospy.logdebug(command)
+        response_handlers = {
+            'ackermann_turn': self.turn_handler,
+            'hello': self.ignore,
+            'location': self.location_handler,
+            'look': self.look_handler,
+            'move': self.move_handler,
+            'music_lights_mode': self.music_lights_handler,
+            'play_song': self.play_handler,
+            'reset': self.reset_handler,
+            'say_hello': self.introduction_handler,
+            'scan': self.scan_handler,
+            'stop': self.stop_handler,
+        }
+        self.slots = self.convert_slot_array_to_map(command.slots)
+        if command.intent_name not in response_handlers:
+            rospy.logwarn("Could not find handler for lex intent " + command.intent_name)
+            return
+        response_handlers[command.intent_name]()
+    
+    def convert_slot_array_to_map(self, slot_array):
+        return {slot.key: slot.value for slot in slot_array}
+
+    def ignore(self):
+        pass
+
+    def turn_handler(self):
+        rospy.loginfo("Turning stering handler: %s",self.slots['turn_direction'])
+        if self.slots['turn_direction'].startswith('centre'):      
+            self.steering_angle = 0
+        elif self.slots['turn_direction'].startswith('left'):        
+            self.steering_angle = self.max_steering_angle
+        elif self.slots['turn_direction'].startswith('right'):        
+            self.steering_angle = -self.max_steering_angle
+
+        ackermann_cmd_msg = AckermannDriveStamped()
+        ackermann_cmd_msg.drive.speed = self.speed
+        ackermann_cmd_msg.drive.steering_angle = self.steering_angle
+        self.steering_pub.publish(ackermann_cmd_msg)
+
+    def hello_handler(self):
+        rospy.loginfo("Hello handler")
+        self.process = subprocess.Popen(["rosrun","tts","voicer.py","'Hello! My name is RoT.'"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    def location_handler(self):
+        rospy.loginfo("Location handler")
+        self.process = subprocess.Popen(["rosrun","tts","voicer.py","'I'm sorry! This function is not currently available'"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    def look_handler(self):
+        rospy.loginfo("Look handler: Looking %s",self.slots['look_direction'])
+        if self.slots['look_direction'].startswith('up'):
+            self.head_tilt = self.max_head_tilt_angle
+        elif self.slots['look_direction'].startswith('down'):
+            self.head_tilt = -self.max_head_tilt_angle
+        elif self.slots['look_direction'].startswith('level'):
+            self.head_tilt = 0
+        elif self.slots['look_direction'].startswith('left'):
+            self.head_pan = -self.max_head_pan_angle
+        elif self.slots['look_direction'].startswith('right'):
+            self.head_pan = self.max_head_pan_angle
+        elif self.slots['look_direction'].startswith('centre'):
+            self.head_pan = 0
+
+        head_tilt_cmd_msg = Int16()
+        head_tilt_cmd_msg.data = self.head_tilt
+        self.head_tilt_pub.publish(head_tilt_cmd_msg)            
+
+        head_pan_cmd_msg = Int16()
+        head_pan_cmd_msg.data = self.head_pan
+        self.head_pan_pub.publish(head_pan_cmd_msg)
+
+    def move_handler(self):
+        rospy.loginfo("Move handler: Moving %s %s meters",self.slots['move_direction'],self.slots['move_distance'])
+        
+        if self.slots['move_direction'].startswith('backward'):
+            self.position = self.position - np.float32(self.slots['move_distance'])
+        else:
+            self.position = self.position + np.float32(self.slots['move_distance'])
+
+        rospy.loginfo("New odometer location: %s meters", str(self.position))
+
+        move_cmd_msg = Float32()
+        move_cmd_msg = self.position
+        self.motors_pub.publish(move_cmd_msg)
+
+    def play_handler(self):
+        rospy.loginfo("Play handler: Playing %s", self.slots['rot_songs'])
+        if self.slots['rot_songs'].startswith('queen'):
+            self.process = subprocess.Popen(["ogg123","/home/rot/Music/We_Will_Rock_You.ogg"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        elif self.slots['rot_songs'].startswith('haka'):
+            self.process = subprocess.Popen(["ogg123","/home/rot/Music/haka.ogg"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    def reset_handler(self):
+        rospy.loginfo("Reset handler")
+
+        ackermann_cmd_msg = AckermannDriveStamped()
+        ackermann_cmd_msg.drive.speed = 0
+        ackermann_cmd_msg.drive.steering_angle = 0
+        self.steering_pub.publish(ackermann_cmd_msg)
+
+        head_tilt_cmd_msg = Int16()
+        head_tilt_cmd_msg.data = 0
+        self.head_tilt_pub.publish(head_tilt_cmd_msg)
+
+        head_pan_cmd_msg = Int16()
+        head_pan_cmd_msg.data = 0
+        self.head_pan_pub.publish(head_pan_cmd_msg)
+
+        lidar_cmd_msg = Bool()
+        lidar_cmd_msg.data = False
+        self.lidar_pub.publish(lidar_cmd_msg)
+
+        music_lights_cmd_msg = Bool()
+        music_lights_cmd_msg.data = False
+        self.music_lights_pub.publish(music_lights_cmd_msg)
+
+    def introduction_handler(self):
+        rospy.loginfo("Introduction handler")
+        self.process = subprocess.Popen(["rosrun","tts","voicer.py","'Hello! My name is RoT. I am the robot of things. I am an experimental platform for developing robots'"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    def music_lights_handler(self):
+        rospy.loginfo("Music and Lights handler: Mode is %s", self.slots['music_lights'])
+        music_lights_cmd_msg = Bool()
+        if self.slots['music_lights'].startswith('on'):
+            music_lights_cmd_msg.data = True
+        else:
+            music_lights_cmd_msg.data = False
+
+        self.music_lights_pub.publish(music_lights_cmd_msg)
+
+    def scan_handler(self):
+        rospy.loginfo("Scan handler: LIDAR scanning is %s", self.slots['scan_mode'])
+        lidar_cmd_msg = Bool()
+        if self.slots['scan_mode'].startswith('on'):
+            lidar_cmd_msg.data = True
+        else:
+            lidar_cmd_msg.data = False
+
+        self.lidar_pub.publish(lidar_cmd_msg)
+
+    def stop_handler(self):
+        rospy.loginfo("Stop handler")
+        self.speed = 0        
+        ackermann_cmd_msg = AckermannDriveStamped()
+        ackermann_cmd_msg.drive.speed = self.speed
+        ackermann_cmd_msg.drive.steering_angle = self.steering_angle
+        self.steering_pub.publish(ackermann_cmd_msg)
+
+def main():
+    try:
+        voice_command_translator = VoiceCommandTranslator()
+        voice_command_translator.run()
+    except rospy.ROSInterruptException:
+        pass
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,9 @@
+<!--
+    This launch file runs the RoT-ROS nodes.
+-->
+
+<launch>
+  <include file="$(find rot)/launch/rot.launch">    
+      <node pkg="rot" type="voice_interaction" name="alexa_interaction" output="$(arg output)"/>
+  </include>
+</launch>

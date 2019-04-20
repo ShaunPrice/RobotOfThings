@@ -6,7 +6,10 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
   rospy
-  ackermann_msgs)
+  ackermann_msgs
+  sensor_msgs
+  audio_common_msgs
+  lex_common_msgs)
 find_package(Boost REQUIRED)
 catkin_python_setup()
 
@@ -31,6 +34,11 @@ catkin_package(
     rospy
     std_msgs
     ackermann_msgs
+    sensor_msgs
+    audio_common_msgs
+    message_runtime
+    lex_common_msgs
+    voice_interaction_robot_msgs
   DEPENDS Boost
 )
 
@@ -44,14 +52,24 @@ catkin_package(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
+  scripts/alexaop.py  
   scripts/joyop.py
   scripts/keyop.py
+  scripts/textop.py
+  scripts/voiceop.py
+  nodes/audio_output
+  nodes/voice_input
+  nodes/voice_output
+  nodes/voice_interaction
+  nodes/voice_command_translator
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(DIRECTORY
+  assets
   config
   launch
+  nodes
   scripts
   rviz
   urdf

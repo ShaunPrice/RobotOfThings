@@ -1,0 +1,585 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "rot",
+            "intents": [
+                {
+                    "name": "music_lights_mode",
+                    "slots": [
+                        {
+                            "name": "music_lights",
+                            "type": "boolean",
+                            "samples": [
+                                "off",
+                                "on"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "music mode {music_lights}",
+                        "turn music mode {music_lights}",
+                        "music and lights mode {music_lights}",
+                        "turn {music_lights} music mode",
+                        "turn {music_lights} lights mode",
+                        "lights mode {music_lights}",
+                        "turn lights mode {music_lights}",
+                        "turn lights {music_lights}",
+                        "lights {music_lights}"
+                    ]
+                },
+                {
+                    "name": "move",
+                    "slots": [
+                        {
+                            "name": "move_direction",
+                            "type": "move_direction",
+                            "samples": [
+                                "ahead",
+                                "back",
+                                "backwards",
+                                "forwards",
+                                "forward"
+                            ]
+                        },
+                        {
+                            "name": "move_distance",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "go {move_direction} {move_distance} centimetres",
+                        "move {move_direction} {move_distance} centimetres",
+                        "move",
+                        "move {move_direction} ",
+                        "move {move_direction} {move_distance}",
+                        "go",
+                        "go {move_direction}",
+                        "go {move_direction} {move_distance}"
+                    ]
+                },
+                {
+                    "name": "stop",
+                    "slots": [],
+                    "samples": [
+                        "stop",
+                        "halt",
+                        "freeze"
+                    ]
+                },
+                {
+                    "name": "play_song",
+                    "slots": [
+                        {
+                            "name": "rot_songs",
+                            "type": "rot_songs",
+                            "samples": [
+                                "play haka",
+                                "play queen",
+                                "haka",
+                                "queen"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "play {rot_songs}"
+                    ]
+                },
+                {
+                    "name": "scan",
+                    "slots": [
+                        {
+                            "name": "scan_mode",
+                            "type": "boolean"
+                        }
+                    ],
+                    "samples": [
+                        "scan {scan_mode}",
+                        "lidar scan {scan_mode}",
+                        "depth scan {scan_mode}",
+                        "lidar {scan_mode}",
+                        "scanning {scan_mode}"
+                    ]
+                },
+                {
+                    "name": "turn_off",
+                    "slots": [],
+                    "samples": [
+                        "turn off",
+                        "power down",
+                        "shut down",
+                        "power off"
+                    ]
+                },
+                {
+                    "name": "reset",
+                    "slots": [],
+                    "samples": [
+                        "reset",
+                        "default"
+                    ]
+                },
+                {
+                    "name": "location",
+                    "slots": [],
+                    "samples": [
+                        "location",
+                        "gps",
+                        "where are you",
+                        "what's you location",
+                        "gps reading"
+                    ]
+                },
+                {
+                    "name": "hello",
+                    "slots": [],
+                    "samples": [
+                        "robot",
+                        "Rot"
+                    ]
+                },
+                {
+                    "name": "look",
+                    "slots": [
+                        {
+                            "name": "look_direction",
+                            "type": "look_direction",
+                            "samples": [
+                                "middle",
+                                "level",
+                                "down",
+                                "up",
+                                "front",
+                                "forwards",
+                                "forward",
+                                "center",
+                                "right",
+                                "left"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "look {look_direction}",
+                        "head {look_direction}"
+                    ]
+                },
+                {
+                    "name": "ackermann_turn",
+                    "slots": [
+                        {
+                            "name": "turn_direction",
+                            "type": "ackermann_turn_direction",
+                            "samples": [
+                                "forward",
+                                "centre",
+                                "right",
+                                "left"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "turn {turn_direction}"
+                    ]
+                },
+                {
+                    "name": "introduction",
+                    "slots": [],
+                    "samples": [
+                        "introduce yourself",
+                        "tell us about yourself",
+                        "introduction",
+                        "tell us who you are"
+                    ]
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                }
+            ],
+            "types": [
+                {
+                    "name": "look_direction",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "left",
+                                "synonyms": [
+                                    "left"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "level",
+                                "synonyms": [
+                                    "middle",
+                                    "level",
+                                    "horizontal"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "centre",
+                                "synonyms": [
+                                    "forwards",
+                                    "front",
+                                    "centre",
+                                    "forward"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "up",
+                                "synonyms": [
+                                    "roof",
+                                    "sky",
+                                    "up"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "right",
+                                "synonyms": [
+                                    "right"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "down",
+                                "synonyms": [
+                                    "floor",
+                                    "ground",
+                                    "down"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "ackermann_turn_direction",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "left",
+                                "synonyms": [
+                                    "left"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "centre",
+                                "synonyms": [
+                                    "centre",
+                                    "forward",
+                                    "front"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "right",
+                                "synonyms": [
+                                    "right"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "boolean",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "off",
+                                "synonyms": [
+                                    "off"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "on",
+                                "synonyms": [
+                                    "on"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "rot_songs",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "queen",
+                                "synonyms": [
+                                    "queen"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "haka",
+                                "synonyms": [
+                                    "haka",
+                                    "hakka"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "move_direction",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "forward",
+                                "synonyms": [
+                                    "forward",
+                                    "forwards",
+                                    "ahead"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "backward",
+                                "synonyms": [
+                                    "reverse",
+                                    "backward",
+                                    "backwards"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "dialog": {
+            "intents": [
+                {
+                    "name": "music_lights_mode",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "music_lights",
+                            "type": "boolean",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-music_lights_mode.IntentSlot-music_lights"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "move",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "move_direction",
+                            "type": "move_direction",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-move.IntentSlot-move_direction"
+                            }
+                        },
+                        {
+                            "name": "move_distance",
+                            "type": "AMAZON.NUMBER",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-move.IntentSlot-move_distance"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "stop",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": []
+                },
+                {
+                    "name": "play_song",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "rot_songs",
+                            "type": "rot_songs",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-play_song.IntentSlot-rot_songs"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "scan",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "scan_mode",
+                            "type": "boolean",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-scan.IntentSlot-scan_mode"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "turn_off",
+                    "confirmationRequired": true,
+                    "prompts": {
+                        "confirmation": "Confirm.Intent-turn_off"
+                    },
+                    "slots": []
+                },
+                {
+                    "name": "reset",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": []
+                },
+                {
+                    "name": "location",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": []
+                },
+                {
+                    "name": "hello",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": []
+                },
+                {
+                    "name": "look",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "look_direction",
+                            "type": "look_direction",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-look.IntentSlot-look_direction"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "ackermann_turn",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "turn_direction",
+                            "type": "ackermann_turn_direction",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-ackermann_turn.IntentSlot-turn_direction"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "introduction",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": []
+                }
+            ],
+            "delegationStrategy": "SKILL_RESPONSE"
+        },
+        "prompts": [
+            {
+                "id": "Elicit.Intent-music_lights_mode.IntentSlot-music_lights",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "On or off?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Intent-move.IntentSlot-move_direction",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "What direction?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Intent-move.IntentSlot-move_distance",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "How far in centimetres?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Intent-play_song.IntentSlot-rot_songs",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Would you like to play Queen or the Haka?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Intent-scan.IntentSlot-scan_mode",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Turn scanning on or off?"
+                    }
+                ]
+            },
+            {
+                "id": "Confirm.Intent-turn_off",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Are you sure you want me to power off?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Intent-look.IntentSlot-look_direction",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Which way should I look?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Intent-ackermann_turn.IntentSlot-turn_direction",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Turn left, right or centre?"
+                    }
+                ]
+            }
+        ]
+    }
+}

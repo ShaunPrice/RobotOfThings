@@ -228,4 +228,4 @@ The stereo cameras on the Raspberry Pi Compute Module has a special configuratio
 - [x] Fix the URDF mapping to RoT messages
 - [x] Implement LIDAR Scanning on the Teensy controller
 - [x] Implement the depth and stereo image messages fro the Raspberry Pi stereo comeras
-- [ ] Integrate with Alexa voice services
+- [x] Integrate with Alexa voice services
