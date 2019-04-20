@@ -70,25 +70,24 @@ class AlexaInput:
         print(text)
 
     def get_input(self):
-        messages = self.queue.receive_messages(MaxNumberOfMessages=1,WaitTimeSeconds=5)
-        # Message received
-        if len(messages) > 0:
-            rospy.loginfo("Received Message From Alexa: {}".format(messages[0].body))
-            # place received mesage on ros message bus
-            json_response = json.loads(messages[0].body)
-            response = AudioTextConversationResponse()
-            response.intent_name = json_response['intentName']
-            response.message_format_type = json_response['messageFormat']
-            response.dialog_state = json_response['dialogState']
-            for slot in json_response['slots']:
-                slotitem = KeyValue(slot.keys()[0],slot.values()[0])
-                response.slots.append(slotitem)
+        while 1:
+            messages = self.queue.receive_messages(MaxNumberOfMessages=1,WaitTimeSeconds=5)
+            # Message received
+            if len(messages) > 0:
+                rospy.loginfo("Received Message From Alexa: {}".format(messages[0].body))
+                # place received mesage on ros message bus
+                json_response = json.loads(messages[0].body)
+                response = AudioTextConversationResponse()
+                response.intent_name = json_response['intentName']
+                response.message_format_type = json_response['messageFormat']
+                response.dialog_state = json_response['dialogState']
+                for slot in json_response['slots']:
+                    slotitem = KeyValue(slot.keys()[0],slot.values()[0])
+                    response.slots.append(slotitem)
 
-            self.handle_alexa_response(response)
-            # remove message from sqs
-            messages[0].delete()
-
-        self.get_input()
+                self.handle_alexa_response(response)
+                # remove message from sqs
+                messages[0].delete()
 
     def handle_alexa_response(self, alexa_response):
         rospy.loginfo("Performing intent: %s" % alexa_response.intent_name)

@@ -65,9 +65,9 @@ class AudioInput():
         audio_input_publisher.publish(audio_data)
 
     def get_input(self):
-        command = raw_input("Audio file or command:\n")
-        self.process_command(command)
-        self.get_input()
+        while 1:
+            command = raw_input("Audio file or command:\n")
+            self.process_command(command)
 
     def process_command(self, command):
         if command.startswith("/dir"):

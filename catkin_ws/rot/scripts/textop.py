@@ -61,10 +61,11 @@ class TextInput:
         print(text)
 
     def get_input(self):
-        text = raw_input("")
-        if len(text) > 0:
-            self.send_text(text)
-        self.get_input()
+        while 1:
+            text = raw_input("")
+            if len(text) > 0:
+                self.send_text(text)
+        
 
 
 def main():
