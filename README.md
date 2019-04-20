@@ -12,7 +12,10 @@ This is not a complete solution. You will also need at least the following packa
 Package Name | Github source | Reference
 ------------ | ------------- | ---------
 AWS RoboMaker TTS | https://github.com/aws-robotics/tts-ros1 | AWS RoboMaker (https://aws.amazon.com/robomaker/)
+AWS RoboMaker LEX | https://github.com/aws-robotics/lex-ros1 | AWS RoboMaker (https://aws.amazon.com/robomaker/)
 Ackermann message | https://github.com/ros-drivers/ackermann_msgs | ROS Ackermann Group (http://wiki.ros.org/Ackermann%20Group)
+
+The robot also integrates with Amazon Alexa (https://developer.amazon.com/alexa) but this is through integration with the AWS RoboMaker software with a custom python script [!alexaop.py](/catkin_ws/rot/scripts/alexaop.py)
 
 ## Overview
 This robot is a personal projct to test robotics, deap learning and vision processing systems. I've shared the code here to help others in their learning of robotics and so others can give me feedback.
@@ -71,7 +74,7 @@ The RoTVision board processes the stereo images from the cameras. It consists of
 
 The board is loaded with Raspbian Stretch and I've compiled ROS Melodic (headless) and OpenCV 4.0.1. ROS includes the sensor_msgs and cv_bridge modules to communicate with ROS.
 
-ROS on the board supplies the components required and it connects back to eth master. My .bashrc scripts contain the following to allow this:
+ROS on the board supplies the components required and it connects back to the master. My .bashrc scripts contain the following to allow this:
 
     export ROS_HOST=rot
     export ROS_MASTER_URI=http://rot:11311
@@ -81,6 +84,11 @@ The IP address for the main controller (rot) is in the hosts file.
 You'll also need to source the ROS setup script
 
 source /opt/ros/melodic/setup.bash
+
+### Amazon Alexa Integration
+
+The Amazon Alexa integration is performed using an Alexa Skill (custom personal, not public). An invocation model is set up for the skill that translates utterances (control sentences) into predefined control messages that get sent to a custom [!AWS Lamba](https://aws.amazon.com/lambda/) function. This function translates the Amazon Alexa messages into a format identical to the [!AWS LEX](https://aws.amazon.com/lex/) format that the robot already processes in the code supplied with the AWS RoboMaker [!LEX ROS package](https://github.com/aws-robotics/lex-ros1). The message is placed on the [!AWS SQS simple queue service](https://aws.amazon.com/sqs/) ready for the robot to pick up and act on. The queue does not keep messages more than 60 seconds to ensure messages are relatively new.
+   
 
 ### Connecting the network between the boards (RoT and RoTVision)
 
