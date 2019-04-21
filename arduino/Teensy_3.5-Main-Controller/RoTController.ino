@@ -69,6 +69,7 @@ also, in ros.h changed the following to increase the buffer from 512 to 1024:
 #include <ArduinoJson.h>
 #include "imumaths/imumaths.h"
 
+#define BRAKE_DISTANCE 0.15 // Distance in meters from the front or rear ultrasonic sensors that be need to stop 
 #define MAIN_LOOP_HZ 20
 #define IMU_LOOP_HZ  100 // Frequency the IMU Loop is read
 
@@ -212,6 +213,11 @@ volatile float32_t acceleration = 0; // # NOT USED # desired acceleration(m / s 
 volatile float32_t jerk = 0; // # NOT USED # desired jerk (m/s^3)
 volatile float32_t steering_angle = 0; // desired virtual angle (radians)
 volatile float32_t steering_angle_velocity = 0; // # NOT USED # desired rate of change (radians/s)
+
+// Braking if too close
+volatile bool tooCloseSet = false; // Used to indicate the ultrasonics have already stopped the motors
+volatile float32_t previousSpeed = 0.0; // Used to store the speed prior to the ultrasonic sensors tell the motors to stop
+
 
 float32_t odom_x = 0;
 float32_t odom_y = 0;
@@ -402,7 +408,7 @@ char* string2char(String command)
 		return nullptr;
 }
 
-// Resets teh TIC motor controller command timeout
+// Resets the TIC motor controller command timeout
 // and runs the spinOnce function of RoS
 void spinResetCommandTimeout()
 {
@@ -1147,6 +1153,32 @@ void rangeLoop()
 
 			frontUltrasonicTimestamp = millis();
 			rearUltrasonicTimestamp = millis();
+		}
+	}
+
+	// Check if we're too close to the front and moving forwards
+	if ((motorCurrentSpeedVal > 0 && frontUltrasonicRange < BRAKE_DISTANCE) || (motorCurrentSpeedVal < 0 && rearUltrasonicRange < BRAKE_DISTANCE))
+	{
+		if (!tooCloseSet)
+		{
+			tooCloseSet = true;
+			previousSpeed = speed;
+			speed = 0;
+			std_msgs::Float32 cmd_msg;
+			cmd_msg.data = 0;
+			motorSpeed_cb(cmd_msg);
+		}
+	}
+	else if ((previousSpeed > 0 && frontUltrasonicRange >= BRAKE_DISTANCE) || (previousSpeed < 0 && rearUltrasonicRange >= BRAKE_DISTANCE))
+	{
+		if (tooCloseSet)
+		{
+			speed = previousSpeed;
+			previousSpeed = 0;
+			std_msgs::Float32 cmd_msg;
+			cmd_msg.data = speed;
+			motorSpeed_cb(cmd_msg);
+			tooCloseSet = false;
 		}
 	}
 
