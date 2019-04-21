@@ -34,7 +34,10 @@ class VoiceCommandTranslator:
 
     def __init__(self):
         rospy.init_node("voice_command_translator")
+        # Listen for voice commands
         rospy.Subscriber('/voice_interaction_node/fulfilled_command', FulfilledVoiceCommand, self.handle_voice_command)
+        # Retreive the current positon for determining the new move position 
+        rospy.Subscriber('/motorCurrentPosition', Float32, self.position_update_handler)
 
         self.max_speed = 0.25
         self.max_steering_angle = 0.35
@@ -89,6 +92,9 @@ class VoiceCommandTranslator:
             return
         response_handlers[command.intent_name]()
     
+    def position_update_handler(self, position):
+        self.position = position.data
+
     def convert_slot_array_to_map(self, slot_array):
         return {slot.key: slot.value for slot in slot_array}
 
@@ -142,16 +148,17 @@ class VoiceCommandTranslator:
 
     def move_handler(self):
         moveMeters = float(self.slots['move_distance']) / 100
+        moveTo = 0.0 # position to move to
 
         if self.slots['move_direction'].startswith('backward'):
-            self.position -= moveMeters
+            moveTo = self.position - moveMeters
         else:
-            self.position += moveMeters
+            moveTo = self.position + moveMeters
 
-        rospy.loginfo("Move handler: Moving %s %s meters to odometer %s",self.slots['move_direction'],str(moveMeters), self.position)        
+        rospy.loginfo("Move handler: Moving %s %s meters to odometer %s",self.slots['move_direction'],str(moveMeters), moveTo)        
 
         move_cmd_msg = Float32()
-        move_cmd_msg = self.position
+        move_cmd_msg = moveTo
         self.motors_pub.publish(move_cmd_msg)
 
     def play_handler(self):
