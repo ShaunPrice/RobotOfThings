@@ -89,10 +89,15 @@ source /opt/ros/melodic/setup.bash
 StereoVision is used to collect teh calibration images and use them to determin the calibration matrices.
 
     **This utility cannot be used to view the disparity or pointcloud images as it is not compatible with OpenCV 3.x and higher for other than calibration.
+    **An updated version still in testing for OpenCV3+ is available on my website at: https://github.com/ShaunPrice/StereoVision
 
 Install the StereoVision utilities from Daniel Lee (https://github.com/erget/StereoVision) using pip:
 
     pip install StereoVision
+
+To install my updated version you'll need to download from github (https://github.com/ShaunPrice/StereoVision) into a folder named StereoVision and install it with:
+
+    pip install -e StereoVision
 
 This library has some prerequisits that also require installation:
 
@@ -102,7 +107,7 @@ This library has some prerequisits that also require installation:
 
 Run the command below to create the calibration matrices in the folder: _/home/**user**/calibration_/
 
-    calibrate_cameras --rows 6 --columns 9 --square-size 25.4 --show-chessboards camimages/ calimages/
+    calibrate_cameras --rows 6 --columns 9 --square-size 25.4 --show-chessboards ~/images/ ~/calibration/
 
 ### Amazon Alexa Integration
 
