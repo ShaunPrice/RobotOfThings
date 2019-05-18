@@ -42,15 +42,27 @@ pattern_points = [pattern_points] * len(left_imgs)
 
 err, Kl, Dl, Kr, Dr, R, T, E, F = cv2.stereoCalibrate(pattern_points, left_pts, right_pts, None, None, None, None, img_size, flags=0)
 
+### Note that the left and right cameras are swapped to match the output from StereoVision
 print('Left camera:')
 print(Kl)
+np.save('calibration/cam_mats_right.npy', Kl)
+
 print('Left camera distortion:')
 print(Dl)
+np.save('calibration/dist_coefs_right.npy', Dl)
+
 print('Right camera:')
 print(Kr)
+np.save('calibration/cam_mats_left.npy', Kr)
+
 print('Right camera distortion:')
 print(Dr)
+np.save('calibration/dist_coefs_left.npy', Dr)
+
 print('Rotation matrix:')
 print(R)
+np.save('calibration/rot_mat.npy', R)
+
 print('Translation:')
 print(T)
+np.save('calibration/trans_vec.npy', T)

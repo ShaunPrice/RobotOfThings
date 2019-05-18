@@ -44,29 +44,14 @@ img_size = (width,height)
 ################################################################
 # Image Rectification Parameters
 ################################################################
-mtxLeftCamera = np.array(
-[[ 486.51278415, 0.0,       308.48359086 ],
- [   0.0,      486.4152203, 240.17983287  ],
- [   0.0,        0.0,          1.0000     ]])
 
-mtxLeftCameraDist = np.array([[0.22176547, -0.57371284, 0.00480635, -0.00072598, 0.42312626]])
-
-mtxRightCamera = np.array(
-[[ 486.27314153, 0.0,         313.49083907 ],
- [   0.0,       484.76326808, 239.66692669 ],
- [   0.0,         0.0,          1.0        ]])
-
-mtxRightCameraDist = np.array([[2.27908780e-01, -6.87854215e-01, 4.25129188e-04, -3.12014438e-04, 5.83601997e-01]])
-
-mtxRotation = np.array(
-[[  0.99725049,     0.01428428, -0.07271464 ],
- [ -0.01059108,     0.99864632,  0.05092495 ],
- [  0.07334363,    -0.0500148,   0.99605182 ]])
-
-mtxTranslation = np.array(
-[[  2.5967436  ],
- [ -0.04762659 ],
- [  0.01515725 ]])
+### Need to swap the left and right cameras because the image is upside-down
+mtxRightCamera = np.load('calibration/cam_mats_left.npy')
+mtxRightCameraDist = np.load('calibration/dist_coefs_left.npy')
+mtxLeftCamera = np.load('calibration/cam_mats_right.npy')
+mtxLeftCameraDist = np.load('calibration/dist_coefs_right.npy')
+mtxRotation = np.load('calibration/rot_mat.npy')
+mtxTranslation = np.load('calibration/trans_vec.npy')
 
 # High speed camera class
 ################################################################
@@ -228,7 +213,7 @@ class Disparity:
                     ################################################################
                     if image is not None:
                         greyImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                
+                        
                         greyRight = greyImage[0:height-1,0:width]
                         greyLeft = greyImage[height:height*2-1,0:width]
 
@@ -241,28 +226,25 @@ class Disparity:
 
                         # Send Rectified Left Greyscale Image
                         try:
-                            self.left_pub.publish(self.bridge.cv2_to_imgmsg(leftImageRectified, "mono8"))
+                            self.left_pub.publish(self.bridge.cv2_to_imgmsg(cv2.rotate(leftImageRectified,cv2.ROTATE_180), "mono8"))
                         except CvBridgeError as e:
                             print(e)
 
                         # Send Rectified Right Greyscale Image
                         try:
-                            self.right_pub.publish(self.bridge.cv2_to_imgmsg(rightImageRectified, "mono8"))
+                            self.right_pub.publish(self.bridge.cv2_to_imgmsg(cv2.rotate(rightImageRectified,cv2.ROTATE_180), "mono8"))
                         except CvBridgeError as e:
                             print(e)
 
-                        if self.disable_disparity is False:
-                            leftImageRectifiedRotated = cv2.rotate(leftImageRectified, cv2.ROTATE_180)
-                            rightImageRectifiedRotated = cv2.rotate(rightImageRectified, cv2.ROTATE_180)
-                        
+                        if self.disable_disparity is False:                     
                             ################################################################
                             # Now we can compute the disparities and convert the resulting images to the desired int16 format or how OpenCV names it: CV_16S for our filter:
-                            displ = self.left_matcher.compute(leftImageRectifiedRotated, rightImageRectifiedRotated)  # .astype(np.float32)/16
-                            dispr = self.right_matcher.compute(rightImageRectifiedRotated, leftImageRectifiedRotated)  # .astype(np.float32)/16
+                            displ = self.left_matcher.compute(leftImageRectified, rightImageRectified)  # .astype(np.float32)/16
+                            dispr = self.right_matcher.compute(rightImageRectified, leftImageRectified)  # .astype(np.float32)/16
 
                             displ = np.int16(displ)
                             dispr = np.int16(dispr)
-                            filteredImg = self.wls_filter.filter(dispr, leftImageRectifiedRotated, None, dispr)  # important to put "leftImageRectifiedRotated" here!!!
+                            filteredImg = self.wls_filter.filter(dispr, leftImageRectified, None, dispr)  # important to put "leftImageRectified" here!!!
 
                             ################################################################
                             # Finally if you show this image with imshow() you may not see anything. This is due to values being not normalized to a 8-bit format. So lets fix this by normalizing our depth map:
@@ -284,10 +266,13 @@ class Disparity:
                             
                             ################################################################
                             # Create and Send Disparity Image
+                            
+                            ### POINTCLOUD CODE IS NOT WORKING ###
+                            ###       Too large in RVIZ        ###
+                             
                             if self.disable_pointcloud is False:
-                                # Create the pointcloud
-                                pointcloudImg = np.rot90(disparityImg) 
-                                points = cv2.reprojectImageTo3D(pointcloudImg,self.Q)
+                                # Create the pointcloud 
+                                points = cv2.reprojectImageTo3D(filteredImg,self.Q)
                                 pointsOut = points.reshape((-1,3))
                                 pointsOut = pointsOut / 8 # Convert to meters
 

@@ -85,6 +85,25 @@ You'll also need to source the ROS setup script
 
 source /opt/ros/melodic/setup.bash
 
+### Stereo Cameras and Depth for RotVision
+StereoVision is used to collect teh calibration images and use them to determin the calibration matrices.
+
+    **This utility cannot be used to view the disparity or pointcloud images as it is not compatible with OpenCV 3.x and higher for other than calibration.
+
+Install the StereoVision utilities from Daniel Lee (https://github.com/erget/StereoVision) using pip:
+
+    pip install StereoVision
+
+This library has some prerequisits that also require installation:
+
+    pip install opencv
+    pip install picamera
+    pip install progressbar
+
+Run the command below to create the calibration matrices in the folder: _/home/**user**/calibration_/
+
+    calibrate_cameras --rows 6 --columns 9 --square-size 25.4 --show-chessboards camimages/ calimages/
+
 ### Amazon Alexa Integration
 
 The Amazon Alexa integration is performed using an Alexa Skill (custom personal, not public). An invocation model is set up for the skill that translates utterances (control sentences) into predefined control messages that get sent to a custom [!AWS Lamba](https://aws.amazon.com/lambda/) function. This function translates the Amazon Alexa messages into a format identical to the [!AWS LEX](https://aws.amazon.com/lex/) format that the robot already processes in the code supplied with the AWS RoboMaker [!LEX ROS package](https://github.com/aws-robotics/lex-ros1). The message is placed on the [!AWS SQS simple queue service](https://aws.amazon.com/sqs/) ready for the robot to pick up and act on. The queue does not keep messages more than 60 seconds to ensure messages are relatively new.
@@ -229,8 +248,32 @@ The stereo cameras on the Raspberry Pi Compute Module has a special configuratio
 
     https://www.raspberrypi.org/documentation/hardware/computemodule/cmio-camera.md
 
+####Configure Audio to output to Teensy and USB Audio device####
+Initialise the "Simultanious" audio output.
+
+In the /etc/pulse/default.pa set:
+
+    set-default-sink combined
+
+####Automatically Start ROS on Boot####
+Intall robot_upstart and configure it to run the specified launch file at startup.
+
+**Note**
+The combined audio is not working with this startup solution.
+    
+    sudo apt update
+    sudo apt upgrade
+    sudo apt install ros-melodic-robot-upstart
+    rosrun robot_upstart install rot/launch/rot-alexa.launch
+    sudo systemctl daemon-reload && sudo systemctl start rot
+
+To uninstall run:
+
+    rosrun robot_upstart uninstall rot
+
 ## Current Issues
 1. The point cloud implementation works but is not scaled to real world units.
+2. The combined audio is not working when started automatically with robot_upstart.
 
 ## TODO
 - [ ] Complete the readme (this document)
