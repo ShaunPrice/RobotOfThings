@@ -52,6 +52,7 @@ mtxLeftCamera = np.load('calibration/cam_mats_right.npy')
 mtxLeftCameraDist = np.load('calibration/dist_coefs_right.npy')
 mtxRotation = np.load('calibration/rot_mat.npy')
 mtxTranslation = np.load('calibration/trans_vec.npy')
+mtxDistToDepth = np.load('calibration/disp_to_depth_mat.npy')
 
 # High speed camera class
 ################################################################
@@ -213,7 +214,6 @@ class Disparity:
                     ################################################################
                     if image is not None:
                         greyImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                        
                         greyRight = greyImage[0:height-1,0:width]
                         greyLeft = greyImage[height:height*2-1,0:width]
 
@@ -272,7 +272,7 @@ class Disparity:
                              
                             if self.disable_pointcloud is False:
                                 # Create the pointcloud 
-                                points = cv2.reprojectImageTo3D(filteredImg,self.Q)
+                                points = cv2.reprojectImageTo3D(filteredImg,mtxDistToDepth)
                                 pointsOut = points.reshape((-1,3))
                                 pointsOut = pointsOut / 8 # Convert to meters
 
