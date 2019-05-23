@@ -112,10 +112,11 @@ class PiVideoStream:
 
 ###############################################################
 class Disparity:
-    def __init__(self, disable_stereo, disable_disparity, disable_pointcloud):
+    def __init__(self, disable_stereo, disable_disparity, enable_pointcloud, enable_local_image):
         self.disable_stereo = disable_stereo
         self.disable_disparity = disable_disparity
-        self.disable_pointcloud = disable_pointcloud
+        self.enable_pointcloud = enable_pointcloud
+        self.enable_local_image = enable_local_image
 
         if self.disable_stereo is False:
             print("Initialise Stereo")
@@ -130,7 +131,7 @@ class Disparity:
             if self.disable_disparity is False:
                 self.disparity_pub = rospy.Publisher("stereo/disparity",Image,queue_size=5)
     
-            if self.disable_pointcloud is False:
+            if self.enable_pointcloud is True:
                 self.pointcloud_pub = rospy.Publisher("stereo/pointcloud",PointCloud2,queue_size=5)
     
             self.bridge = CvBridge()
@@ -257,6 +258,10 @@ class Disparity:
                             filteredImg = np.uint8(filteredImg)
                             disparityImg = cv2.rotate(filteredImg,cv2.ROTATE_180)
 
+                            if self.enable_local_image is True:
+                                colourImg  = cv2.applyColorMap(disparityImg , cv2.COLORMAP_JET)
+                                cv2.imshow("Image", colourImg)
+                                key = cv2.waitKey(1) & 0xFF
                             ################################################################
                             # Send Disparity Image
                             try:
@@ -270,7 +275,7 @@ class Disparity:
                             ### POINTCLOUD CODE IS NOT WORKING ###
                             ###       Too large in RVIZ        ###
                              
-                            if self.disable_pointcloud is False:
+                            if self.enable_pointcloud is True:
                                 # Create the pointcloud 
                                 points = cv2.reprojectImageTo3D(filteredImg,mtxDistToDepth)
                                 pointsOut = points.reshape((-1,3))
@@ -321,7 +326,8 @@ def main(args):
     # initialise
     disable_stereo = False
     disable_disparity = False
-    disable_pointcloud = False
+    enable_pointcloud = False
+    enable_local_image = False
     help_only = False
     
     # See if there's any command line arguments to process
@@ -333,15 +339,18 @@ def main(args):
             if arg == "--no_disp" or arg == "-nd":
                 disable_disparity = True
                 print("Disparity Disabled")
-            if arg == "--no_points" or arg == "-np":
-                disable_pointcloud = True   # -np or --nopoint
-                print("Point Cloud Disabled")
+            if arg == "--points" or arg == "-p":
+                enable_pointcloud = True   # -p or --points
+                print("Point Cloud Enabled")
+            if arg == "--local_image" or arg == "-li":
+                enable_local_image = True   # -li or --local_image
+                print("Local Coloured Disparity Image Enabled")
             if arg == "--help" or arg == "-h":
                 help_only = True
 
     if help_only is False:
         print("Start the disparity thread")
-        disp = Disparity(disable_stereo, disable_disparity, disable_pointcloud).start()
+        disp = Disparity(disable_stereo, disable_disparity, enable_pointcloud, enable_local_image).start()
         
         rospy.init_node('Disparity', anonymous=True)
 
@@ -356,10 +365,11 @@ def main(args):
     else:
         print("usage: ros-disparity [option] ...")
         print("Options and arguments:")
-        print("--no_stereo -ns  : Don't process stereo, disparity image or point cloud image.")
-        print("--no_disp   -nd  : Don't process disparity image or point cloud image.")
-        print("--no_points -np  : Don't process point cloud image.")
-        print("--help      -h   : Show this help message.")
+        print("--no_stereo   -ns  : Don't process stereo, disparity image or point cloud image.")
+        print("--no_disp     -nd  : Don't process disparity image or point cloud image.")
+        print("--no_points   -np  : Don't process point cloud image.")
+        print("--local_image -li  : Show a local coured disparity image.")
+        print("--help        -h   : Show this help message.")
 
 if __name__ == '__main__':
     main(sys.argv)
