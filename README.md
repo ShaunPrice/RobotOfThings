@@ -135,7 +135,7 @@ Add the host names to the Odroids host file:
 
 Add:
 
-    127.0.1.1	rot
+    127.0.0.1	rot
     10.1.0.2	rotvision
 
 Configure forwarding for RoT Vision (rotvision):
@@ -143,17 +143,20 @@ Configure forwarding for RoT Vision (rotvision):
 **Note:**
 The following is adapted from https://askubuntu.com/questions/1050816/ubuntu-18-04-as-a-router
 
-Enable ufw and ufw logging:
+Enable ufw and ufw logging is not enabled:
 
     sudo ufw enable
     sudo ufw logging on
 
-Flush any existing rules (do NOT do this if you are already using ufw or IP tables for firewalling). Delete and flush. Default table is "filter". Others like "nat" must be explicitly stated.
+Flush any existing rules. Delete and flush. Default table is "filter". Others like "nat" must be explicitly stated.
 
-    iptables --flush            # Flush all the rules in filter and nat tables    
-    iptables --table nat --flush    
-    iptables --delete-chain     # Delete all chains that are not in default filter and nat table    
-    iptables --table nat --delete-chain    
+**WARNING:**
+*__Do NOT__ do this if you are already using ufw or IP tables for firewalling.*
+
+    sudo iptables --flush            # Flush all the rules in filter and nat tables    
+    sudo iptables --table nat --flush    
+    sudo iptables --delete-chain     # Delete all chains that are not in default filter and nat table    
+    sudo iptables --table nat --delete-chain    
 
 Packet forwarding needs to be enabled in ufw. Two configuration files will need to be adjusted, in **/etc/default/ufw** change the DEFAULT_FORWARD_POLICY to “ACCEPT”:
 
@@ -162,7 +165,7 @@ Packet forwarding needs to be enabled in ufw. Two configuration files will need 
 Edit **/etc/ufw/sysctl.conf** and uncomment:
 
     net/ipv4/ip_forward=1
-    net/ipv4/conf/all/forwarding=1 
+    net/ipv6/conf/all/forwarding=1 
     net/ipv6/conf/default/forwarding=1 # if using IPv6
 
 Add rules to the **/etc/ufw/before.rules** file. The default rules only configure the filter table, and to enable masquerading the nat table will need to be configured.
@@ -183,7 +186,7 @@ Add the following forwarding rules to the iptables:
 
     sudo iptables -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
     sudo iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
-    
+
 To store the iptable rules persistently install the following package:
 	
     sudo apt-get install iptables-persistent
@@ -260,6 +263,8 @@ In the /etc/pulse/default.pa set:
 
     set-default-sink combined
 
+This can 
+
 ####Automatically Start ROS on Boot####
 Intall robot_upstart and configure it to run the specified launch file at startup.
 
@@ -275,6 +280,23 @@ The combined audio is not working with this startup solution.
 To uninstall run:
 
     rosrun robot_upstart uninstall rot
+
+### TIC Motor Controller ###
+
+Disable the TIC's Pullup resistors in the advanced settings for 3.3V devices.
+
+### RoT Controller (Teensy 3.5)
+For the serial to work with the Teensy the following needs to be implemented:
+
+**Note:** rosserial updates may overwrite these changes.
+
+In **ros.h** changed the following to increase the buffer from 512 to 1024:
+
+    typedef NodeHandle_<ArduinoHardware, 25, 25, 2048, 2048> NodeHandle;
+
+You also need to add the udev rules for the teensy by copying the rules file below to the **/etc/udev/rules.d/** folder.
+
+    /arduino/Teensy_3.5-Main-Controller/49-teensy.rules
 
 ## Current Issues
 1. The point cloud implementation works but is not scaled to real world units.

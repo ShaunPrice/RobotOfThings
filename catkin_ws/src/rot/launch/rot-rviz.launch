@@ -1,0 +1,10 @@
+<!--
+    This launch file runs the RoT-ROS nodes.
+-->
+
+<launch>
+    <arg name="rvizconfig" default="$(find rot)/rviz/rot.rviz" />
+    <arg name="model" default="$(find rot)/urdf/rot.urdf"/>
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+</launch>
