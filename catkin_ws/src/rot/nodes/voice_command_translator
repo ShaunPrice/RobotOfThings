@@ -66,6 +66,7 @@ class VoiceCommandTranslator:
         self.head_pan_pub = rospy.Publisher(cmd_head_pan_topic, Int16, queue_size=10)
         self.lidar_pub = rospy.Publisher(cmd_lidar_topic, Bool, queue_size=10)
         self.music_lights_pub = rospy.Publisher(cmd_music_lights_topic, Bool, queue_size=10)
+        rospy.loginfo("voice_command_translator initialised")
 
     def run(self):
         rospy.spin()

@@ -27,6 +27,7 @@ class VoiceOutput:
     def __init__(self, node_name):
         rospy.init_node(node_name)
         rospy.Subscriber("/" + node_name + "/speak", String, self.speak_text)
+        rospy.loginfo("voice_output initialised")
 
     def run(self):
         rospy.spin()

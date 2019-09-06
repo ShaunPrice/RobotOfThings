@@ -55,6 +55,7 @@ class VoiceInput:
                              input=True,
                              input_device_index=self.input_device_index,
                              frames_per_buffer=self.chunk_size)
+        rospy.loginfo("voice_input initialised")
 
     def close_stream(self):
         if self.stream:

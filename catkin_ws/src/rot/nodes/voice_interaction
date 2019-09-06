@@ -66,6 +66,7 @@ class VoiceInteraction:
         self.fulfilled_command_publisher = rospy.Publisher("/" + node_name + fulfilled_command_topic,
                                                            FulfilledVoiceCommand,
                                                            queue_size=5)
+        rospy.loginfo("voice_interaction initialised")
 
     def listen(self):
         rospy.spin()

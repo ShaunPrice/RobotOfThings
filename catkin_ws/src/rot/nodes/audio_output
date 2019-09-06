@@ -27,6 +27,7 @@ class AudioOutput:
         rospy.Subscriber("/audio_output", AudioData, self.play_audio_data)
         self.output_device_index = None
         self.get_output_device_index()
+        rospy.loginfo("audio_output initialised")
 
     def run(self):
         rospy.spin()
@@ -47,19 +48,19 @@ class AudioOutput:
         stream.write(audio_data)
 
     def get_output_device_index(self):
-        """ Finds the audio device named 'play' configured in ~/.asoundrc.
+        """ Finds the audio device named 'combined' configured in /.asoundrc.
             If this device is not found, returns None and pyaudio will use
             your machines default device
         """
         p = pyaudio.PyAudio()
-        rospy.loginfo("Attempting to find device named 'play'")
+        rospy.loginfo("Attempting to find device named 'combined'")
         for i in range(p.get_device_count()):
             device = p.get_device_info_by_index(i)
-            if device['name'] == 'play':
-                rospy.loginfo("Found device 'play' at index %d" % i)
+            if device['name'] == 'combined':
+                rospy.loginfo("Found device 'combined' at index %d" % i)
                 self.output_device_index = i
                 return
-        rospy.loginfo("Could not find device named 'play', falling back to default audio output device")
+        rospy.loginfo("Could not find device named 'combined', falling back to default audio output device")
 
 
 def main():
