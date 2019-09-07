@@ -53,7 +53,6 @@ catkin_package(
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
   scripts/alexaop.py  
-  scripts/joyop.py
   scripts/keyop.py
   scripts/textop.py
   scripts/voiceop.py
@@ -62,6 +61,7 @@ install(PROGRAMS
   nodes/voice_output
   nodes/voice_interaction
   nodes/voice_command_translator
+  nodes/gamepad_command_translator
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

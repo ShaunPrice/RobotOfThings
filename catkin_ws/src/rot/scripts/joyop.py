@@ -40,8 +40,8 @@ class AckermannDriveJoyop:
         rospy.loginfo('ackermann_drive_joyop_node initialized')
 
     def joy_callback(self, joy_msg):
-        self.speed = joy_msg.axes[2] * self.max_speed;
-        self.steering_angle = joy_msg.axes[3] * self.max_steering_angle;
+        self.speed = joy_msg.axes[2] * self.max_speed
+        self.steering_angle = joy_msg.axes[3] * self.max_steering_angle
 
 
     def pub_callback(self, event):

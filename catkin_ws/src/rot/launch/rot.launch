@@ -31,6 +31,7 @@
     <remap from="/voice_interaction_node/audio_output" to="/audio_output" />
     <node pkg="rot" type="voice_interaction" name="voice_interaction" output="$(arg output)"/>
     <node pkg="rot" type="voice_command_translator" name="voice_command_translator" output="$(arg output)"/>
+    <node pkg="rot" type="gamepad_command_translator" name="gamepad_command_translator" output="$(arg output)"/>
 
     <arg name="use_microphone" default="false"/>
     <group if="$(arg use_microphone)">
@@ -44,16 +45,12 @@
         <node pkg="rot" type="audio_output" name="audio_output" output="$(arg output)"/>
     </group>
 
-    <!-- joy node -->
-    <node respawn="true" pkg="joy" type="joy_node" name="rot_joy" >
-        <param name="dev" type="string" value="/dev/input/js0" />
-        <param name="deadzone" value="0.12" />
-    </node>
-
-    <!-- Axes >
-    <param name="axis_linear" value="1" type="int"/>
-    <param name="axis_angular" value="0" type="int"/>
-    <param name="scale_linear" value="2" type="double"/>
-    <param name="scale_angular" value="2" type="double"/-->
-    
+    <!-- gamepad/joy node -->
+    <arg name="use_gamepad" default="false"/>
+    <group if="$(arg use_gamepad)">
+        <node respawn="true" pkg="joy" type="joy_node" name="rot_joy" >
+            <param name="dev" type="string" value="/dev/input/js0" />
+            <param name="deadzone" value="0.12" />
+        </node>
+    </group>
 </launch>

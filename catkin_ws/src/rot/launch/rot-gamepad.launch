@@ -1,0 +1,9 @@
+<!--
+    This launch file runs the RoT-ROS nodes.
+-->
+
+<launch>
+  <include file="$(find rot)/launch/rot.launch">    
+    <arg name="use_gamepad" default="true"/>
+  </include>
+</launch>

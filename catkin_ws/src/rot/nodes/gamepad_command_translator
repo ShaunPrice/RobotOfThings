@@ -1,0 +1,265 @@
+#!/usr/bin/env python
+"""
+ Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ software and associated documentation files (the "Software"), to deal in the Software
+ without restriction, including without limitation the rights to use, copy, modify,
+ merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ permit persons to whom the Software is furnished to do so.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+
+"""
+This node processes fulfilled commands from lex and turns them into robot commands
+"""
+
+import subprocess
+import threading
+import rospy
+from sensor_msgs.msg import Joy
+from ackermann_msgs.msg import AckermannDriveStamped
+from std_msgs.msg import Float32
+from std_msgs.msg import Int16
+from std_msgs.msg import Bool
+
+class GamepadCommandTranslator:
+    slots = []
+
+    def __init__(self):
+        rospy.init_node("gamepad_command_translator")
+        # Listen for gamepad commands
+        rospy.Subscriber('/joy', Joy, self.handle_gamepad_command)
+        # Retreive the current positon for determining the new move position 
+        rospy.Subscriber('/motorCurrentPosition', Float32, self.position_update_handler)
+
+        self.max_speed = 0.25
+        self.max_steering_angle = 0.35
+        self.max_head_tilt_angle = 100 # %
+        self.max_head_pan_angle = 100  # %
+
+        self.position = 0.0
+        self.speed = 0.0
+        self.steering_angle = 0.0
+        self.head_tilt = 0.0
+        self.head_pan = 0.0
+        self.lidarScan = False # False = Off, True = On
+        self.musicLights = False # False = Off, True = On
+        self.reset = False
+        self.tts_running = False
+        self.tts_process = None
+
+        self.play_running = False
+        self.play_process = None
+
+        cmd_run_topic = 'ackermann_cmd'
+        cmd_head_tilt_topic = 'headTilt'
+        cmd_head_pan_topic = 'headPan'
+        cmd_lidar_topic = 'lidarScan'
+        cmd_music_lights_topic = 'musicLights'
+        cmd_motor_topic = 'motorPosition'
+
+        self.steering_pub = rospy.Publisher(cmd_run_topic, AckermannDriveStamped, queue_size=10)
+        self.motors_pub = rospy.Publisher(cmd_motor_topic, Float32, queue_size=10)
+        self.head_tilt_pub = rospy.Publisher(cmd_head_tilt_topic, Int16, queue_size=10)
+        self.head_pan_pub = rospy.Publisher(cmd_head_pan_topic, Int16, queue_size=10)
+        self.lidar_pub = rospy.Publisher(cmd_lidar_topic, Bool, queue_size=10)
+        self.music_lights_pub = rospy.Publisher(cmd_music_lights_topic, Bool, queue_size=10)
+        rospy.loginfo("gamepad_command_translator initialised")
+
+    # Runs in a loop and send commands
+    def run(self):
+        r = rospy.Rate(10) # 10hz
+        while not rospy.is_shutdown():
+            # Head Pan
+            head_pan_cmd_msg = Int16()
+            head_pan_cmd_msg.data = self.head_pan
+            self.head_pan_pub.publish(head_pan_cmd_msg)
+
+            # Head Tilt
+            head_tilt_cmd_msg = Int16()
+            head_tilt_cmd_msg.data = self.head_tilt
+            self.head_tilt_pub.publish(head_tilt_cmd_msg)            
+
+            # Speed and turning
+            ackermann_cmd_msg = AckermannDriveStamped()
+            ackermann_cmd_msg.drive.speed = self.speed
+            ackermann_cmd_msg.drive.steering_angle = self.steering_angle
+            self.steering_pub.publish(ackermann_cmd_msg)
+
+            r.sleep()
+
+    def handle_gamepad_command(self, command):
+        rospy.logdebug("Fulfilled Gamepad command:")
+        rospy.logdebug(command)
+
+        # Left Joystick - Head Pan
+        self.head_pan = self.max_head_pan_angle * command.axes[0]
+
+        # Left Joystick - Head Tilt
+        self.head_tilt = self.max_head_tilt_angle * command.axes[1]
+
+        # Right Joystick
+        self.steering_angle = self.max_steering_angle * command.axes[2]
+        self.speed = self.max_speed * command.axes[3]
+
+        # D-PAD LEFT-RIGHT
+        # self.axes[4]
+
+        # D-PAD UP-DOWN
+        #self.axes[5]
+
+        # B - Hello
+        if command.buttons[0]:
+            if self.tts_running == False:
+                self.tts_handler("'Hello'")
+
+        # A - Intro
+        if command.buttons[1]:
+            if self.tts_running == False:
+                self.tts_handler("'Hello! My name is RoT. I am the Robot of Things. I'm a development robot for testing of robotics technologies.")
+
+        # Y - Lidar Scan Toggle
+        if command.buttons[2]:
+            rospy.loginfo("LIDAR Scan:")
+            if self.lidarScan:
+                self.lidarScan = False
+                self.lidar_pub.publish(False)
+                rospy.loginfo("    ON")
+            else:
+                self.lidarScan = True
+                self.lidar_pub.publish(True)
+                rospy.loginfo("    OFF")
+
+        # X - Music & Lights Toggle
+        if command.buttons[3]:
+            rospy.loginfo("Music and Lights:")
+            if self.musicLights:
+                self.musicLights = False
+                self.music_lights_pub.publish(False)
+                rospy.loginfo("    ON")
+            else:
+                self.musicLights = True
+                self.music_lights_pub.publish(True)
+                rospy.loginfo("    OFF")
+
+        # L - No Action
+        if command.buttons[4]:
+            rospy.loginfo("Gamepad L - No Action")
+        
+        # R - Play Queen
+        if command.buttons[5]:
+            if self.play_running == False:
+                rospy.loginfo("Play We Will Rock You by  Queen")
+                self.play_handler("/home/rot/Music/We_Will_Rock_You.ogg")
+
+        # L2 - No Action
+        if command.buttons[6]:
+            rospy.loginfo("Gamepad L2 - No Action")
+
+        # R2 - Play Haka
+        if command.buttons[7]:
+            if self.play_running == False:
+                rospy.loginfo("Play Haka")
+                self.play_handler("/home/rot/Music/haka.ogg")
+
+        # Select - No Action
+        if command.buttons[8]:
+            rospy.loginfo("Gamepad Select - No Action")
+ 
+        # Start - No Action
+        if command.buttons[9]:
+            rospy.loginfo("Gamepad Start - No Action")
+ 
+        # Hot Key 12 - Stop 
+        if command.buttons[4]:
+            rospy.loginfo("Stop")
+            self.stop_handler()
+
+        # Star 13 - Reset
+        if command.buttons[4]:
+            rospy.loginfo("Reset")
+            self.reset_handler()
+
+    def position_update_handler(self, position):
+        self.position = position.data
+
+    def tts_handler(self, text):
+        rospy.loginfo("TTS: %s", text)
+        self.tts_running
+        self.tts_process = subprocess.Popen(["rosrun","tts","voicer.py",text], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        thread = threading.Thread(target=self.tts_wait, args=())
+        # spin of thread and exit
+        thread.start()
+
+    # Waits for tts process to exit and resets the tts_running flag 
+    def tts_wait(self):
+        self.tts_process.wait()
+        self.tts_running = False
+
+    # Plays the music
+    def play_handler(self, text):
+        rospy.loginfo("Play: %s", text)
+        self.play_running
+        self.play_process = subprocess.Popen(["ogg123", text], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        thread = threading.Thread(target=self.play_wait, args=())
+        # spin of thread and exit
+        thread.start()
+
+    # Waits for ogg123 process to exit and resets the tts_running flag 
+    def play_wait(self):
+        self.play_process.wait()
+        self.play_running = False
+
+    def reset_handler(self):
+        rospy.loginfo("Reset handler")
+        try:
+            self.play_process.kill()
+        except:
+            pass
+
+        self.play_running = False
+
+        try:
+            self.tts_process.kill()
+        except:
+            pass
+
+        self.tts_handler("'Reset'")
+
+        self.speed = 0
+        self.steering_angle = 0
+ 
+        self.head_pan = 0.0
+        self.head_tilt = 0.0
+        
+        self.lidarScan = False
+        lidar_cmd_msg = Bool()
+        lidar_cmd_msg.data = False
+        self.lidar_pub.publish(lidar_cmd_msg)
+
+        self.musicLights = False
+        music_lights_cmd_msg = Bool()
+        music_lights_cmd_msg.data = False
+        self.music_lights_pub.publish(music_lights_cmd_msg)
+
+    def stop_handler(self):
+        rospy.loginfo("Stop handler")
+        self.speed = 0        
+ 
+def main():
+    try:
+        gamepad_command_translator = GamepadCommandTranslator()
+        gamepad_command_translator.run()
+    except rospy.ROSInterruptException:
+        pass
+
+
+if __name__ == '__main__':
+    main()
