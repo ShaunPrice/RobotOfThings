@@ -255,12 +255,12 @@ You may need to manually add a static default gateway route.
 
     sudo route add default gw 10.1.0.1
 
-####RoTVision Stereo Camera Configuration####
+#### RoTVision Stereo Camera Configuration####
 The stereo cameras on the Raspberry Pi Compute Module has a special configuration to get the camera to work together detailed on the Raspberry Pi site:
 
     https://www.raspberrypi.org/documentation/hardware/computemodule/cmio-camera.md
 
-####Configure Audio to output to Teensy and USB Audio device####
+#### Configure Audio to output to Teensy and USB Audio device####
 Initialise the "Simultanious" audio output.
 
 In the /etc/pulse/default.pa set:
@@ -269,7 +269,7 @@ In the /etc/pulse/default.pa set:
 
 This can 
 
-####Automatically Start ROS on Boot####
+#### Automatically Start ROS on Boot####
 Intall robot_upstart and configure it to run the specified launch file at startup.
 
 **Note**
