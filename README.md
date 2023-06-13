@@ -28,15 +28,15 @@ The robot is based on ROS (http://ros.org) the Robot Operating System. It uses m
 
 While making this robot I have used many online sites for information. In no particuular order I have extensively used the following:
 
-**ROS** - http://www.ros.org/
-**pyimagesearch** - https://www.pyimagesearch.com
-**O'Reilly Safafi Books Online (subscription)** - https://my.safaribooksonline.com/
-**OpenCV** - https://opencv.org/
-**Robot Accademy** - https://robotacademy.net.au/
-**The Construct** - http://www.theconstructsim.com/
-**PJRC.com (Teensy)** - https://pjrc.com
-**Adafruit** - https://www.adafruit.com/
-**Sparkfun Electronics** - https://www.sparkfun.com/
+- **ROS** - http://www.ros.org/  
+- **pyimagesearch** - https://www.pyimagesearch.com  
+- **O'Reilly Safafi Books Online (subscription)** - https://my.safaribooksonline.com/  
+- **OpenCV** - https://opencv.org/  
+- **Robot Accademy** - https://robotacademy.net.au/  
+- **The Construct** - http://www.theconstructsim.com/  
+- **PJRC.com (Teensy)** - https://pjrc.com  
+- **Adafruit** - https://www.adafruit.com/  
+- **Sparkfun Electronics** - https://www.sparkfun.com/  
 
 ## Controller and Sensors Overview
 A short cli of RoT running:
